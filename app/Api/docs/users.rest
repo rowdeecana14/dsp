@@ -1,0 +1,45 @@
+@baseUrl = http://localhost:3000
+@authToken = {{login.response.body.data.token}}
+@id = 2f7aae37-4c35-497a-b827-329e315414cd
+
+### Auth - Login
+# @name login
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "change-me-strongly"
+}
+
+### Users - List
+GET {{baseUrl}}/api/v1/users
+Authorization: Bearer {{authToken}}
+
+### Users - Get By ID
+GET {{baseUrl}}/api/v1/users/{{id}}
+Authorization: Bearer {{authToken}}
+
+### Users - Create
+POST {{baseUrl}}/api/v1/users
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "email": "snews.user@example.com",
+  "name": "New User",
+  "password": "password"
+}
+
+### Users - Update
+PATCH {{baseUrl}}/api/v1/users/{{id}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Updated User"
+}
+
+### Users - Delete
+DELETE {{baseUrl}}/api/v1/users/{{id}}
+Authorization: Bearer {{authToken}}

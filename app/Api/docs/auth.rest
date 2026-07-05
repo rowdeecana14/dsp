@@ -1,0 +1,47 @@
+@baseUrl = http://localhost:3000
+@authToken = {{login.response.body.data.token}}
+
+### Auth - Register
+POST {{baseUrl}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "new8sss1A.user@example.com",
+  "password": "Change1@-me-strongly",
+  "name": "New User"
+}
+
+### Auth - Login
+# @name login
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "new8sss1A.user@example.com",
+  "password": "Change1@-me-strongly"
+}
+
+### Auth - Update Profile
+PATCH {{baseUrl}}/api/v1/auth/me
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Updated Name 1"
+}
+
+### Auth - Get My Profile
+GET {{baseUrl}}/api/v1/auth/me
+Authorization: Bearer {{authToken}}
+
+### Auth - Admin Only
+GET {{baseUrl}}/api/v1/auth/admin-only
+Authorization: Bearer {{authToken}}
+
+### Auth - Permission Only
+GET {{baseUrl}}/api/v1/auth/permission-only
+Authorization: Bearer {{authToken}}
+
+### Auth - Manage Settings
+GET {{baseUrl}}/api/v1/auth/settings
+Authorization: Bearer {{authToken}}

@@ -1,0 +1,58 @@
+@baseUrl = http://localhost:3000
+@authToken = {{login.response.body.data.token}}
+
+### Auth - Login
+# @name login
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "change-me-strongly"
+}
+
+### Users - List (pagination + sorting)
+GET {{baseUrl}}/api/v1/users?page=1&limit=10&sort_by=name&sort_order=DESC
+Authorization: Bearer {{authToken}}
+
+### Users - Invalid Sort (Should fail with 400)
+GET {{baseUrl}}/api/v1/users?page=1&limit=10&sort_by=name
+Authorization: Bearer {{authToken}}
+
+### Roles - List (pagination + sorting)
+GET {{baseUrl}}/api/v1/roles?page=1&limit=10&sort_by=name&sort_order=ASC
+Authorization: Bearer {{authToken}}
+
+### Permissions - List (pagination + sorting)
+GET {{baseUrl}}/api/v1/permissions?page=1&limit=10&sort_by=name&sort_order=ASC
+Authorization: Bearer {{authToken}}
+
+### Measurements - List (pagination + sorting)
+GET {{baseUrl}}/api/v1/measurements?study_instance_uid=1.2.840.10008.5.1.4.1.1.2&page=1&limit=10&sort_by=label&sort_order=ASC
+Authorization: Bearer {{authToken}}
+
+### Viewer State - List (pagination + sorting)
+GET {{baseUrl}}/api/v1/viewer-state?study_instance_uid=1.2.840.10008.5.1.4.1.1.2&page=1&limit=10&sort_by=mode&sort_order=ASC
+Authorization: Bearer {{authToken}}
+
+### Example (curl)
+curl -s "{{baseUrl}}/api/v1/users?page=1&limit=10&sort_by=name&sort_order=desc" -H "Authorization: Bearer ${TOKEN}" | jq
+
+### Expected Response Shape
+{
+  "data": [ /* array of objects */ ],
+  "meta": {
+    "total": 0,
+    "page": 1,
+    "limit": 10,
+    "last_page": 0,
+    "sort_by": "created_at",
+    "sort_order": "ASC"
+  }
+}
+
+### Usage Notes
+- Default ordering is always `created_at ASC` unless a whitelisted `sort_by` is provided.
+- `sort_by` is validated against a whitelist to prevent SQL injection and return a 400 Bad Request if invalid.
+- Use global `ValidationPipe` with `transform: true`, `whitelist: true`, `forbidNonWhitelisted: true` to enable DTO validation.
+

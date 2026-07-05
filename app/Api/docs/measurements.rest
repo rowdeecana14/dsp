@@ -1,0 +1,44 @@
+@baseUrl = http://localhost:3000
+@authToken = {{login.response.body.data.token}}
+@id = 7ebdbd2f-8b42-44bd-bac2-b941e3d4b798
+
+### Auth - Login
+# @name login
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "superadmin@example.com",
+  "password": "change-me-strongly"
+}
+
+### Measurements - List
+GET {{baseUrl}}/api/v1/measurements?study_instance_uid=1.2.840.113619.2.55.3.604688175.827.1599878051.467
+Authorization: Bearer {{authToken}}
+
+### Measurements - List (camelCase)
+GET {{baseUrl}}/api/v1/measurements?study_instance_uid=1.2.840.113619.2.55.3.604688175.827.1599878051.467
+Authorization: Bearer {{authToken}}
+
+### Measurements - Delete
+DELETE {{baseUrl}}/api/v1/measurements/{{id}}
+Authorization: Bearer {{authToken}}
+
+### Measurements - Create
+POST {{baseUrl}}/api/v1/measurements
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "study_instance_uid": "1.2.840.113619.2.55.3.604688175.827.1599878051.467",
+  "measurements": [
+    {
+      "label": "Length",
+      "value": "23.5",
+      "unit": "mm",
+      "tool": "Length",
+      "captured_at": "2026-07-05T12:34:56Z",
+      "coordinates": { "x": 100, "y": 200 }
+    }
+  ]
+}

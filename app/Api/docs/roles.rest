@@ -1,0 +1,44 @@
+@baseUrl = http://localhost:3000
+@authToken = {{login.response.body.data.token}}
+@id = 48b3d337-92c2-426f-a54f-769b2674bf30
+
+### Auth - Login
+# @name login
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "superadmin@example.com",
+  "password": "change-me-strongly"
+}
+
+### Roles - List
+GET {{baseUrl}}/api/v1/roles
+Authorization: Bearer {{authToken}}
+
+### Roles - Get By ID
+GET {{baseUrl}}/api/v1/roles/{{id}}
+Authorization: Bearer {{authToken}}
+
+### Roles - Create
+POST {{baseUrl}}/api/v1/roles
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "editor",
+  "display_name": "Editor"
+}
+
+### Roles - Update
+PATCH {{baseUrl}}/api/v1/roles/{{id}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "display_name": "Edito r"
+}
+
+### Roles - Delete
+DELETE {{baseUrl}}/api/v1/roles/{{id}}
+Authorization: Bearer {{authToken}}
