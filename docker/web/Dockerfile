@@ -1,5 +1,5 @@
 # Development Dockerfile for the frontend container.
-# The source is mounted from app/Viewers at runtime.
+# The source is mounted from app/web/Viewers at runtime.
 
 FROM node:24.15.0-slim
 WORKDIR /usr/src/web

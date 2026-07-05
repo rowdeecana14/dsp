@@ -38,10 +38,10 @@ services:
       context: ./api
       dockerfile: Dockerfile
     volumes:
-      - ../app/Api:/usr/src/api
-      - ../app/Api/logs:/usr/src/api/logs
+      - ../app/api:/usr/src/api
+      - ../app/api/logs:/usr/src/api/logs
     ports:
-      - '${API_PORT:-3000}:3000'
+      - '${api_PORT:-3000}:3000'
     depends_on:
       mysql:
         condition: service_healthy
@@ -69,12 +69,13 @@ services:
       context: ./web
       dockerfile: Dockerfile
     volumes:
-      - ../app/Viewers:/usr/src/web
+      - ../app/web/Viewers:/usr/src/web
       - web_node_modules:/usr/src/web/node_modules
     ports:
       - '${WEB_PORT:-8080}:3000'
     environment:
       CHOKIDAR_USEPOLLING: 'true'
+      APP_CONFIG: config/dental.js
 
 volumes:
   db_data:

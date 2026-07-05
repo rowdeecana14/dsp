@@ -6,7 +6,7 @@ This folder contains a Docker-based development environment for the OHIF Medical
 # OHIF Medical Imaging Viewer development setup
 #
 # Setup:
-#   1. Place the OHIF viewer source in ../app/Viewers
+#   1. Place the OHIF viewer source in ../app/web/Viewers
 #   2. Place your backend source in ../app/Api (optional if you have an API)
 #   3. Create or update docker/.env.docker with your MySQL credentials
 #
@@ -27,13 +27,13 @@ The OHIF Viewer is a React-based medical imaging viewer that can display DICOM i
 
 - starts a local MySQL database
 - starts a backend API container from `app/Api`
-- starts the frontend Viewer container from `app/Viewers`
+- starts the frontend Viewer container from `app/web/Viewers`
 - mounts local source code into containers so code changes are reflected immediately
 
 ## Setup
 
 1. Ensure your project root has the following folders:
-   - `app/Viewers`
+   - `app/web/Viewers`
    - `app/Api`
 2. Copy or update `docker/.env.docker` with your desired MySQL credentials.
 3. From the `docker/` directory run:
@@ -47,10 +47,10 @@ docker compose --env-file .env.docker up -d --build
 
 If you want to prepare or run the OHIF viewer manually using the official development workflow, follow these steps:
 
-1. Ensure the OHIF source is available in `app/Viewers`.
+1. Ensure the OHIF source is available in `app/web/Viewers`.
 2. Open a terminal at the viewer root:
    ```bash
-cd /home/rudy/projects/dsp/app/Viewers
+cd /home/rudy/projects/dsp/app/web/Viewers
 ```
 3. Restore dependencies:
    ```bash
@@ -86,7 +86,7 @@ docker compose logs -f
 
 - `mysql` - MySQL 8 database service
 - `api` - backend API container using source from `../app/Api` (optional; enabled with a Compose profile)
-- `web` - frontend Viewer container using source from `../app/Viewers`
+- `web` - frontend Viewer container using source from `../app/web/Viewers`
 
 ## Ports
 
@@ -97,6 +97,6 @@ docker compose logs -f
 ## Notes
 
 - This is a development-only Docker setup.
-- `app/Viewers` and `app/Api` must contain the source code for the frontend and backend respectively.
+- `app/web/Viewers` and `app/Api` must contain the source code for the frontend and backend respectively.
 - Dependency installation happens inside the containers at startup.
 - If you want to use a different env file name, adjust the `--env-file` flag accordingly.
