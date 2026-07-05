@@ -3,8 +3,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, A
 import { MeasurementsService } from './measurements.service';
 import { SaveMeasurementsDto } from './dto/save-measurements.dto';
 import { AuthUserDto } from '../auth/dto/auth.dto';
-import { JwtAuth } from '../../modules/auth/decorators/jwt-auth.decorator';
-import { Auth } from '../../modules/auth/decorators/auth.decorator';
+import { JwtAuth } from '../auth/decorators/jwt-auth.decorator';
+import { Auth } from '../auth/decorators/auth.decorator';
 import { IdParamDto } from './dto/id-param.dto';
 import { MeasurementsPaginationDto } from './dto/measurements-pagination.dto';
 import { MeasurementsPaginationService } from './services/measurements.pagination.service';

@@ -6,11 +6,11 @@ import { UpdateUserDto } from '../auth/dto/update-user.dto';
 import { DeleteUserDto } from './dto/delete-user.dto';
 import { IdParamDto } from './dto/id-param.dto';
 import { UserService } from './services/user.service';
-import { Permission } from '../../modules/auth/decorators/permission.decorator';
+import { Permission } from '../auth/decorators/permission.decorator';
 import { UsersPaginationDto } from './dto/users-pagination.dto';
 import { UsersPaginationService } from './services/users.pagination.service';
-import { JwtAuth } from '../../modules/auth/decorators/jwt-auth.decorator';
-import { Roles } from '../../modules/auth/decorators/roles.decorator';
+import { JwtAuth } from '../auth/decorators/jwt-auth.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('users')
 @ApiBearerAuth()

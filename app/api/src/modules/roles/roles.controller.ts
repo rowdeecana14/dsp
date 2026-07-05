@@ -3,9 +3,9 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, A
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
-import { Permission } from '../../modules/auth/decorators/permission.decorator';
-import { Roles } from '../../modules/auth/decorators/roles.decorator';
-import { JwtAuth } from '../../modules/auth/decorators/jwt-auth.decorator';
+import { Permission } from '../auth/decorators/permission.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuth } from '../auth/decorators/jwt-auth.decorator';
 import { IdParamDto } from './dto/id-param.dto';
 import { RolesPaginationService } from './services/roles.pagination.service';
 import { RolesPaginationDto } from './dto/roles-pagination.dto';

@@ -3,8 +3,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiSecurity
 import { ViewerStateService } from './viewer-state.service';
 import { SaveViewerStateDto } from './dto/save-viewer-state.dto';
 import { AuthUserDto } from '../auth/dto/auth.dto';
-import { Auth } from '../../modules/auth/decorators/auth.decorator';
-import { JwtAuth } from '../../modules/auth/decorators/jwt-auth.decorator';
+import { Auth } from '../auth/decorators/auth.decorator';
+import { JwtAuth } from '../auth/decorators/jwt-auth.decorator';
 import { ViewerStatePaginationDto } from './dto/viewer-state-pagination.dto';
 import { ViewerStatePaginationService } from './services/viewer-state.pagination.service';
 
