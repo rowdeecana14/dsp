@@ -38,4 +38,7 @@ if needs_install; then
   exit 1
 fi
 
+export APP_CONFIG="${APP_CONFIG:-config/dental.js}"
+export REACT_APP_API_URL="${REACT_APP_API_URL:-http://localhost:3000/api/v1}"
+
 exec pnpm run dev

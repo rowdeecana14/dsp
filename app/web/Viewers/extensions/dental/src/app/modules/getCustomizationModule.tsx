@@ -33,7 +33,17 @@ export default function getCustomizationModule() {
   return [
     {
       name: 'dental',
-      value: {},
+      value: {
+        'ohif.hotkeyBindings': {
+          $push: [
+            {
+              commandName: 'exportDentalMeasurements',
+              label: 'Export dental measurements JSON',
+              keys: ['Ctrl', 'Shift', 'E'],
+            },
+          ],
+        },
+      },
     },
     {
       name: 'dentalAuth',

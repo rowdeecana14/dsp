@@ -2,6 +2,7 @@ import { Types } from '@ohif/core';
 import { ActiveThemeProvider } from '@ohif/ui-next';
 
 import { id } from './id';
+import DentalAuthBootstrapProvider from './app/providers/DentalAuthBootstrapProvider';
 import getHangingProtocolModule from './app/modules/getHangingProtocolModule';
 import getCustomizationModule from './app/modules/getCustomizationModule';
 import getPanelModule from './app/modules/getPanelModule';
@@ -43,6 +44,12 @@ const dentalExtension: Types.Extensions.Extension = {
 
     if (hasThemeModule) {
       serviceProvidersManager.registerProvider('activeTheme', ActiveThemeProvider);
+    }
+
+    const dentalApiUrl = (appConfig as { dentalApiUrl?: string } | undefined)?.dentalApiUrl;
+    const hasOidc = Array.isArray(appConfig?.oidc) && appConfig.oidc.length > 0;
+    if (dentalApiUrl && !hasOidc) {
+      serviceProvidersManager.registerProvider('dentalAuthBootstrap', DentalAuthBootstrapProvider);
     }
   },
 

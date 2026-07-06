@@ -1,0 +1,31 @@
+{
+  "name": "dental",
+  "label": "Tonal: Dental Clinical",
+  "cssVars": {
+    "dark": {
+      "highlight": "174 72% 52%",
+      "neutral": "180 15% 52%",
+      "neutral-light": "174 35% 72%",
+      "neutral-dark": "200 18% 24%",
+      "background": "180 20% 98%",
+      "foreground": "200 25% 15%",
+      "card": "180 18% 96%",
+      "card-foreground": "200 25% 15%",
+      "popover": "174 45% 94%",
+      "popover-foreground": "200 25% 15%",
+      "primary": "174 72% 40%",
+      "primary-foreground": "0 0% 100%",
+      "secondary": "174 35% 88%",
+      "secondary-foreground": "200 25% 20%",
+      "muted": "180 15% 94%",
+      "muted-foreground": "200 10% 45%",
+      "accent": "174 45% 92%",
+      "accent-foreground": "200 25% 15%",
+      "destructive": "0 65% 48%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "174 30% 85%",
+      "input": "174 25% 88%",
+      "ring": "174 72% 40%"
+    }
+  }
+}
