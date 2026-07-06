@@ -36,15 +36,10 @@ const dentalExtension: Types.Extensions.Extension = {
       sameModalityAsCurrent
     );
 
-    const hasThemeModule =
-      Array.isArray(appConfig?.customizationService) &&
-      appConfig.customizationService.some(
-        (ref: string) => typeof ref === 'string' && ref.includes('customizationModule.theme')
-      );
-
-    if (hasThemeModule) {
-      serviceProvidersManager.registerProvider('activeTheme', ActiveThemeProvider);
-    }
+    // Dental UI (ThemeToggle, DentalThemeBridge, viewer state restore) always calls
+    // useActiveTheme, so register the provider unconditionally — not only when the
+    // theme customization module is listed in app config.
+    serviceProvidersManager.registerProvider('activeTheme', ActiveThemeProvider);
 
     const dentalApiUrl = (appConfig as { dentalApiUrl?: string } | undefined)?.dentalApiUrl;
     const hasOidc = Array.isArray(appConfig?.oidc) && appConfig.oidc.length > 0;

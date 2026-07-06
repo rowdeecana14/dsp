@@ -36,6 +36,7 @@ import {
 } from '../../modules/viewer';
 import { useMeasurementStore } from '../../modules/measurements';
 import { useViewerStore } from '../../modules/viewer';
+import { applyDentalModeTheme } from '../../shared/utils/themeBridge';
 
 export default function getCommandsModule({
   servicesManager,
@@ -87,6 +88,7 @@ export default function getCommandsModule({
       ? DENTAL_MEASUREMENT_PRESETS.find(item => item.id === resolvedPresetId)
       : undefined;
     const unit = preset?.unit ?? (trimmedUnit || 'mm');
+    const selectedTooth = useDentalStore.getState().selectedTooth;
 
     if (resolvedPresetId) {
       rememberDentalPresetForMeasurement(uid, resolvedPresetId);
@@ -99,6 +101,7 @@ export default function getCommandsModule({
         ...measurement,
         label,
         unit,
+        selected_tooth: selectedTooth,
         ...(resolvedPresetId ? { dentalPresetId: resolvedPresetId } : {}),
       },
       true
@@ -106,6 +109,10 @@ export default function getCommandsModule({
   };
 
   const actions = {
+    applyDentalTheme: () => {
+      applyDentalModeTheme();
+    },
+
     initDentalMeasurementLabeling: () => {
       if (measurementAddedUnsub) {
         return;
@@ -238,6 +245,9 @@ export default function getCommandsModule({
   };
 
   const definitions = {
+    applyDentalTheme: {
+      commandFn: actions.applyDentalTheme,
+    },
     initDentalMeasurementLabeling: {
       commandFn: actions.initDentalMeasurementLabeling,
     },

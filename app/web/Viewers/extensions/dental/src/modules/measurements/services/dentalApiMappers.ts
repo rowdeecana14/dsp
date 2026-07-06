@@ -13,6 +13,7 @@ import {
   resolveDentalMeasurementLabel,
   resolveDentalPresetId,
   getDentalPresetForMeasurement,
+  useDentalStore,
 } from '../../dental/store/dental.store';
 import { ToothSystem } from '../../../shared/utils/toothNumbering';
 import { getActiveViewportSlot } from '../../../shared/utils/viewportConfig';
@@ -184,6 +185,13 @@ export function mapMeasurementToExport(
     (measurement as { displaySetInstanceUID?: string }).displaySetInstanceUID ??
     (measurement.metadata as { referencedImageId?: string } | undefined)?.referencedImageId;
 
+  const selectedTooth =
+    String(
+      (measurement as { selected_tooth?: string }).selected_tooth ??
+        (measurement as { selectedTooth?: string }).selectedTooth ??
+        ''
+    ).trim() || useDentalStore.getState().selectedTooth;
+
   return {
     ...(exportId ? { id: exportId } : {}),
     ...(context?.viewer_state_id ? { viewer_state_id: context.viewer_state_id } : {}),
@@ -210,6 +218,7 @@ export function mapMeasurementToExport(
       displaySetInstanceUID: (measurement as { displaySetInstanceUID?: string })
         .displaySetInstanceUID,
       dental_preset_id: dentalPresetId,
+      selected_tooth: selectedTooth,
       ...(isLocked ? { is_locked: true } : {}),
       ...(isVisible === false ? { is_visible: false } : {}),
     }),

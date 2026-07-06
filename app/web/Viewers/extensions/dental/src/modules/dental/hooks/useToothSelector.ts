@@ -111,6 +111,13 @@ export function useToothSelector() {
 
   useEffect(() => () => cancelDentalViewerStateAutoSave(), []);
 
+  useEffect(() => {
+    if (!studyInstanceUID || restoringRef.current) {
+      return;
+    }
+    persistState(selectedTooth, toothSystem, activeTheme);
+  }, [activeTheme, studyInstanceUID, selectedTooth, toothSystem, persistState]);
+
   const onToothChange = useCallback(
     (tooth: string) => {
       setSelectedTooth(tooth);

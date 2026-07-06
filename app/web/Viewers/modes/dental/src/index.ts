@@ -67,6 +67,7 @@ function modeFactory({ modeConfiguration }) {
         'mode'
       );
 
+      commandsManager.runCommand('applyDentalTheme', {}, 'DEFAULT');
       commandsManager.runCommand('initDentalMeasurementLabeling', {}, 'DEFAULT');
     },
     onModeExit: ({ servicesManager, commandsManager }: withAppTypes) => {

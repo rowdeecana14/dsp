@@ -12,6 +12,7 @@ dsp/
 │       └── Viewers/         # OHIF v3 fork with dental extension & mode
 ├── docker/                  # Docker Compose for local development
 ├── docs/
+│   ├── SETUP_DENTAL.md      # Dental viewer setup, config, troubleshooting
 │   └── DEMO_RECORDING.md    # Step-by-step demo video script
 └── README.md
 ```
@@ -64,6 +65,8 @@ docker compose exec api pnpm run migrate && docker compose exec api pnpm run db:
 
 The viewer loads `config/dental.js` automatically (`APP_CONFIG=config/dental.js`). The web container mounts `app/web/Viewers` for live code changes.
 
+See [docs/SETUP_DENTAL.md](docs/SETUP_DENTAL.md) for full setup, configuration, and troubleshooting.
+
 ### Option B — Local development
 
 **Backend:**
@@ -81,7 +84,7 @@ pnpm run start:dev
 ```bash
 cd app/web/Viewers
 pnpm install
-REACT_APP_API_URL=http://localhost:3000/api/v1 APP_CONFIG=config/dental.js pnpm run dev
+APP_CONFIG=config/dental.js pnpm run dev:dental
 ```
 
 Open the port shown in the terminal (often http://localhost:3000).
@@ -186,11 +189,12 @@ REACT_APP_API_URL=https://api.example.com/api/v1 APP_CONFIG=config/dental.js pnp
 | Item | Location |
 |------|----------|
 | Practice name | `platform/app/public/config/dental.js` → `dentalPracticeName` |
-| Measurement presets | `extensions/dental/src/constants/measurementPresets.ts` |
+| Measurement presets | `extensions/dental/src/modules/dental/store/measurementPresets.ts` |
 | Hanging protocol | `extensions/dental/src/hangingprotocols/hpDental2x2.ts` |
 | Dental mode | `modes/dental/src/index.ts` |
-| Login page | `extensions/dental/src/components/DentalLoginPage.tsx` |
+| Login page | `extensions/dental/src/modules/auth/components/DentalLoginPage.tsx` |
 | API URL | `dentalApiUrl` in `config/dental.js` |
+| Full setup guide | [docs/SETUP_DENTAL.md](docs/SETUP_DENTAL.md) |
 
 ## License
 

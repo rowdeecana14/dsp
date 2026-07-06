@@ -56,6 +56,7 @@ const COORDINATE_WIRE_KEYS = [
   'series_instance_uid',
   'reference_series_uid',
   'dental_preset_id',
+  'selected_tooth',
 ] as const;
 
 const PATCH_WIRE_KEYS = ['action', 'label', 'is_locked'] as const;

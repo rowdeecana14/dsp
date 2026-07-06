@@ -17,6 +17,7 @@ export interface MeasurementCoordinates {
   series_instance_uid?: string;
   reference_series_uid?: string;
   dental_preset_id?: string;
+  selected_tooth?: string;
 }
 
 export interface MeasurementRecord {

@@ -8,6 +8,7 @@ import SidePanelWithServices from '@ohif/extension-default/src/Components/SidePa
 import useResizablePanels from '@ohif/extension-default/src/ViewerLayout/ResizablePanelsHook';
 import { Onboarding, ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@ohif/ui-next';
 import { PracticeHeader } from '../../../modules/dental';
+import DentalThemeBridge from '../../../modules/dental/components/DentalThemeBridge';
 import { DentalStudySync } from '../../../modules/studies';
 import { DentalViewportPlaceholders } from '../../../modules/viewer';
 
@@ -142,6 +143,7 @@ function DentalViewerLayout({
 
   return (
     <div>
+      <DentalThemeBridge />
       <DentalStudySync />
       <PracticeHeader appConfig={appConfig} />
       <div

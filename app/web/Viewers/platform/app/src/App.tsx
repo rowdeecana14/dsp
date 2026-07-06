@@ -113,6 +113,10 @@ function App({
     customizationService,
   } = servicesManager.services;
 
+  const providersFromManager = Object.entries(serviceProvidersManager.providers);
+  const activeThemeProviderEntry = providersFromManager.find(([name]) => name === 'activeTheme');
+  const otherManagerProviders = providersFromManager.filter(([name]) => name !== 'activeTheme');
+
   const providers = [
     [AppConfigProvider, { value: appConfigState }],
     [UserAuthenticationProvider, { service: userAuthenticationService }],
@@ -125,15 +129,17 @@ function App({
     [CineProvider, { service: cineService }],
     [NotificationProvider, { service: uiNotificationService }],
     [TooltipProvider],
+    // ActiveThemeProvider must wrap Dialog/Modal: Appearance and other modals call useActiveTheme.
+    ...(activeThemeProviderEntry
+      ? [[activeThemeProviderEntry[1], { service: servicesManager.services[activeThemeProviderEntry[0]] }]]
+      : []),
     [DialogProvider, { service: uiDialogService, dialog: ManagedDialog }],
     [ModalProvider, { service: uiModalService, modal: ModalNext }],
     [ShepherdJourneyProvider],
   ];
 
-  // Loop through and register each of the service providers registered with the ServiceProvidersManager.
-  const providersFromManager = Object.entries(serviceProvidersManager.providers);
-  if (providersFromManager.length > 0) {
-    providersFromManager.forEach(([serviceName, provider]) => {
+  if (otherManagerProviders.length > 0) {
+    otherManagerProviders.forEach(([serviceName, provider]) => {
       providers.push([provider, { service: servicesManager.services[serviceName] }]);
     });
   }

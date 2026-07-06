@@ -72,7 +72,7 @@ function DentalHeader({
             )}
             <DentalToothIcon className="text-primary h-6 w-6 shrink-0" />
             <p
-              className="text-foreground max-w-[220px] truncate text-sm font-semibold leading-tight"
+              className="text-foreground max-w-[220px] truncate text-sm font-semibold leading-tight tracking-wide"
               data-cy="practice-name"
               title={practiceName}
             >
