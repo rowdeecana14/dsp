@@ -1,29 +1,24 @@
-import { IsIn, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsObject, IsOptional, IsString } from 'class-validator';
 
-export class SaveViewerStateDto {
-  @IsString()
-  @IsNotEmpty()
-  study_instance_uid!: string;
-
-  @IsString()
+export class UpdateViewerStateDto {
   @IsOptional()
+  @IsString()
   mode?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   theme?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   selected_tooth?: string;
 
-  @IsString()
   @IsOptional()
-  @IsIn(['FDI', 'Universal'])
-  tooth_system?: 'FDI' | 'Universal';
+  @IsString()
+  tooth_system?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   viewport_layout?: string;
 
   @IsOptional()

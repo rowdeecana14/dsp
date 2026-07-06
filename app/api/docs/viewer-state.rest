@@ -1,5 +1,8 @@
 @baseUrl = http://localhost:3000
 @authToken = {{login.response.body.data.token}}
+@user_id = {{login.response.body.data.user.id}}
+@study_instance_uid = 1.2.840.113619.2.55.3.604688175.827.1599878051.467
+@viewer_state_id = {{saveViewerState.response.body.data.id}}
 
 ### Auth - Login
 # @name login
@@ -11,25 +14,57 @@ Content-Type: application/json
   "password": "change-me-strongly"
 }
 
-### Viewer State - Get
-GET {{baseUrl}}/api/v1/viewer-state?study_instance_uid=1.2.840.113619.2.55.3.604688175.827.1599878051.467
+### Viewer State - List (pagination)
+GET {{baseUrl}}/api/v1/viewer-state?study_instance_uid={{study_instance_uid}}&page=1&limit=10&sort_by=updated_at&sort_order=DESC
 Authorization: Bearer {{authToken}}
 
-### Viewer State - Get (camelCase)
-GET {{baseUrl}}/api/v1/viewer-state?study_instance_uid=1.2.840.113619.2.55.3.604688175.827.1599878051.467
+### Viewer State - Get by study (authenticated user)
+GET {{baseUrl}}/api/v1/viewer-state/study/{{study_instance_uid}}
 Authorization: Bearer {{authToken}}
 
-### Viewer State - Save
+### Viewer State - Get by user + study (user must match JWT)
+GET {{baseUrl}}/api/v1/viewer-state/{{user_id}}/{{study_instance_uid}}
+Authorization: Bearer {{authToken}}
+
+### Viewer State - Save (create or upsert)
+# @name saveViewerState
 POST {{baseUrl}}/api/v1/viewer-state
 Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
-  "study_instance_uid": "1.2.840.113619.2.55.3.604688175.827.1599878051.467",
-  "mode": "viewer",
-  "theme": "dark",
-  "viewportLayout": "axial",
-  "selectedTooth": "11",
-  "toothSystem": "FDI",
-  "measurements": []
+  "study_instance_uid": "{{study_instance_uid}}",
+  "mode": "dental",
+  "theme": "dental",
+  "viewport_layout": "2x2-dental",
+  "selected_tooth": "36",
+  "tooth_system": "FDI",
+  "patient_id": "P001",
+  "viewport_config": {
+    "top_left": "dental-current-display-set-uid",
+    "top_right": "dental-prior-display-set-uid",
+    "bottom_left": "dental-bw-left-display-set-uid",
+    "bottom_right": "dental-bw-right-display-set-uid"
+  }
 }
+
+### Viewer State - Update by ID
+PUT {{baseUrl}}/api/v1/viewer-state/{{viewer_state_id}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "theme": "dental",
+  "selected_tooth": "11",
+  "tooth_system": "FDI",
+  "patient_id": "P001",
+  "viewport_config": {
+    "top_left": "dental-current-display-set-uid",
+    "top_right": "dental-prior-display-set-uid"
+  }
+}
+
+### Notes
+# All request/response fields use snake_case (study_instance_uid, selected_tooth, viewport_config, etc.).
+# viewer_state table columns: id, user_id, study_instance_uid, mode, theme, selected_tooth,
+# tooth_system, viewport_layout, patient_id, viewport_config, created_at, updated_at, ...

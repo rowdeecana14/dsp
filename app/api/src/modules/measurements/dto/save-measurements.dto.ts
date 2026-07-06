@@ -1,9 +1,17 @@
-import { ArrayNotEmpty, IsArray, IsNotEmpty, IsObject, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+  IsString,
+  ValidateIf,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class MeasurementDto {
   @IsOptional()
-  @IsUUID()
+  @IsString()
   id?: string;
 
   @IsString()
@@ -22,40 +30,76 @@ export class MeasurementDto {
   @IsNotEmpty()
   tool!: string;
 
-  @Transform(({ value, obj }) => value ?? obj.capturedAt)
   @IsString()
   @IsNotEmpty()
   captured_at!: string;
 
-  @Transform(({ value, obj }) => value ?? obj.captured_at)
-  @IsOptional()
-  @IsString()
-  capturedAt?: string;
-
   @IsOptional()
   @IsObject()
-  coordinates?: Record<string, any>;
+  coordinates?: Record<string, unknown>;
+
+  @IsOptional()
+  @IsString()
+  dental_preset_id?: string;
+
+  @IsOptional()
+  @IsString()
+  viewer_state_id?: string;
+
+  @IsOptional()
+  @IsString()
+  type?: string;
+
+  @IsOptional()
+  @IsString()
+  viewport?: string;
+
+  @IsOptional()
+  @IsString()
+  image_id?: string;
+
+  @IsOptional()
+  @IsString()
+  series_id?: string;
 }
 
-export class SaveMeasurementsDto {
-  @Transform(({ value, obj }) => value ?? obj.studyInstanceUID ?? obj.StudyInstanceUID)
+export class SeriesMeasurementsDto {
+  @IsString()
+  @IsNotEmpty()
+  series_id!: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => MeasurementDto)
+  measurements!: MeasurementDto[];
+}
+
+export class StudyMeasurementsDto {
   @IsString()
   @IsNotEmpty()
   study_instance_uid!: string;
 
-  @Transform(({ value, obj }) => value ?? obj.study_instance_uid)
-  @IsOptional()
-  @IsString()
-  studyInstanceUID?: string;
-
-  @Transform(({ value, obj }) => value ?? obj.study_instance_uid)
-  @IsOptional()
-  @IsString()
-  StudyInstanceUID?: string;
-
   @IsArray()
-  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => SeriesMeasurementsDto)
+  series!: SeriesMeasurementsDto[];
+}
+
+export class SaveMeasurementsDto {
+  @ValidateIf(dto => !dto.study_instance_uid)
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StudyMeasurementsDto)
+  studies?: StudyMeasurementsDto[];
+
+  @ValidateIf(dto => !dto.studies?.length)
+  @IsString()
+  @IsNotEmpty()
+  study_instance_uid?: string;
+
+  @ValidateIf(dto => !dto.studies?.length)
+  @IsArray()
   @ValidateNested({ each: true })
   @Type(() => MeasurementDto)
-  measurements!: MeasurementDto[];
+  measurements?: MeasurementDto[];
 }

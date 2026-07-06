@@ -5,9 +5,10 @@ import { MeasurementsService } from './measurements.service';
 import { MeasurementEntity } from './entities/measurement.entity';
 import { MeasurementRepository } from './measurement.repository';
 import { MeasurementsPaginationService } from './services/measurements.pagination.service';
+import { ViewerStateModule } from '../viewer-state/viewer-state.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([MeasurementEntity])],
+  imports: [TypeOrmModule.forFeature([MeasurementEntity]), ViewerStateModule],
   controllers: [MeasurementsController],
   providers: [MeasurementsService, MeasurementRepository, MeasurementsPaginationService],
 })

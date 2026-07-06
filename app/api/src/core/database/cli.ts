@@ -15,9 +15,10 @@ async function main() {
     ...process.env,
   });
 
-  // Validate config
+  // Validate config (plain env object — ConfigService instance is not a Zod input)
+  const envConfig = { ...configuration(), ...process.env };
   try {
-    validationSchema.parse(config);
+    validationSchema.parse(envConfig);
   } catch (error) {
     console.error('❌ Configuration validation failed:');
     if (error instanceof Error) {

@@ -33,8 +33,11 @@ export class ViewerStateEntity {
   @Column({ name: 'viewport_layout', type: 'varchar', length: 64 })
   viewport_layout!: string;
 
-  @Column({ type: 'json', nullable: true })
-  measurements?: any[];
+  @Column({ name: 'patient_id', type: 'varchar', length: 128, nullable: true })
+  patient_id?: string | null;
+
+  @Column({ name: 'viewport_config', type: 'json', nullable: true })
+  viewport_config?: Record<string, unknown> | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'datetime' })
   created_at!: Date;

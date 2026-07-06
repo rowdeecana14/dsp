@@ -14,6 +14,10 @@ export class ViewerStateRepository {
     return this.repository.findOne({ where: { study_instance_uid: studyInstanceUID, user_id: userId } });
   }
 
+  async findByIdAndUser(id: string, userId: string) {
+    return this.repository.findOne({ where: { id, user_id: userId } });
+  }
+
   async saveState(state: ViewerStateEntity) {
     return this.repository.save(state);
   }

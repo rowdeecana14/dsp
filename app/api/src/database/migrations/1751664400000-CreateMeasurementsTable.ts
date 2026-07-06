@@ -6,11 +6,17 @@ export class CreateMeasurementsTable1751664400000 implements MigrationInterface 
       CREATE TABLE IF NOT EXISTS measurements (
         id CHAR(36) NOT NULL,
         study_instance_uid VARCHAR(128) NOT NULL,
+        series_id VARCHAR(128) NOT NULL DEFAULT 'unknown-series',
         user_id VARCHAR(128) NOT NULL,
+        viewer_state_id CHAR(36) NULL,
         label VARCHAR(128) NOT NULL,
         value VARCHAR(128) NOT NULL,
         unit VARCHAR(64) NOT NULL,
         tool VARCHAR(128) NOT NULL,
+        dental_preset_id VARCHAR(64) NULL,
+        type VARCHAR(64) NULL,
+        viewport VARCHAR(64) NULL,
+        image_id VARCHAR(512) NULL,
         captured_at VARCHAR(64) NOT NULL,
         coordinates JSON NULL,
         created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
@@ -20,7 +26,9 @@ export class CreateMeasurementsTable1751664400000 implements MigrationInterface 
         deleted_at DATETIME(6) NULL,
         deleted_by VARCHAR(128) NULL,
         PRIMARY KEY (id),
-        INDEX IDX_MEASUREMENTS_STUDY_USER (study_instance_uid, user_id)
+        INDEX IDX_MEASUREMENTS_STUDY_USER (study_instance_uid, user_id),
+        INDEX IDX_MEASUREMENTS_STUDY_USER_SERIES (study_instance_uid, user_id, series_id),
+        INDEX IDX_MEASUREMENTS_VIEWER_STATE (viewer_state_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);
   }

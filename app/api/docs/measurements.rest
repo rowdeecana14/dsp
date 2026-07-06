@@ -1,6 +1,10 @@
 @baseUrl = http://localhost:3000
 @authToken = {{login.response.body.data.token}}
-@id = 7ebdbd2f-8b42-44bd-bac2-b941e3d4b798
+@study_instance_uid = 1.2.840.113619.2.55.3.604688175.827.1599878051.467
+@series_id = 1.2.826.0.1.3680043.8.498.1.1.1.1.1.1
+@viewer_state_id = {{saveViewerState.response.body.data.id}}
+@measurement_id = {{createMeasurement.response.body.data.id}}
+@image_id = wadors:https://d14fa38qiwhyfd.cloudfront.net/dicomweb/studies/{{study_instance_uid}}/series/{{series_id}}/instances/1.2.392.200036.9125.0.19950720093509/frames/1
 
 ### Auth - Login
 # @name login
@@ -12,33 +16,207 @@ Content-Type: application/json
   "password": "change-me-strongly"
 }
 
-### Measurements - List
-GET {{baseUrl}}/api/v1/measurements?study_instance_uid=1.2.840.113619.2.55.3.604688175.827.1599878051.467
+### Viewer State - Save (for viewer_state_id variable)
+# @name saveViewerState
+POST {{baseUrl}}/api/v1/viewer-state
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "study_instance_uid": "{{study_instance_uid}}",
+  "mode": "dental",
+  "theme": "dental",
+  "viewport_layout": "2x2-dental",
+  "selected_tooth": "36",
+  "tooth_system": "FDI",
+  "patient_id": "P001"
+}
+
+### Measurements - List (grouped by study → series)
+GET {{baseUrl}}/api/v1/measurements?study_instance_uid={{study_instance_uid}}&page=1&limit=10&sort_by=label&sort_order=ASC
 Authorization: Bearer {{authToken}}
 
-### Measurements - List (camelCase)
-GET {{baseUrl}}/api/v1/measurements?study_instance_uid=1.2.840.113619.2.55.3.604688175.827.1599878051.467
+### Measurements - List with filters
+GET {{baseUrl}}/api/v1/measurements?study_instance_uid={{study_instance_uid}}&page=1&limit=10&sort_by=updated_at&sort_order=DESC&search=PA&dental_preset_id=pa-length&series_ids={{series_id}}
 Authorization: Bearer {{authToken}}
 
-### Measurements - Delete
-DELETE {{baseUrl}}/api/v1/measurements/{{id}}
+### Measurements - List by viewer state
+GET {{baseUrl}}/api/v1/measurements/viewer-state/{{viewer_state_id}}
 Authorization: Bearer {{authToken}}
 
-### Measurements - Create
+### Measurements - Create single
+# @name createMeasurement
+POST {{baseUrl}}/api/v1/measurements/create
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "study_instance_uid": "{{study_instance_uid}}",
+  "viewer_state_id": "{{viewer_state_id}}",
+  "label": "PA length",
+  "value": "12.5",
+  "unit": "mm",
+  "tool": "Length",
+  "type": "PA_LENGTH",
+  "viewport": "top_left",
+  "image_id": "{{image_id}}",
+  "dental_preset_id": "pa-length",
+  "series_id": "{{series_id}}",
+  "captured_at": "2026-07-05T12:34:56.000Z",
+  "coordinates": {
+    "points": [[120, 200, 0], [300, 400, 0]],
+    "frame_of_reference_uid": "1.2.3",
+    "series_id": "{{series_id}}",
+    "sop_instance_uid": "1.2.392.200036.9125.0.19950720093509",
+    "referenced_image_id": "{{image_id}}",
+    "display_set_instance_uid": "d3345a1b-85b6-e2cf-4b51-28f2f46823bb",
+    "dental_preset_id": "pa-length"
+  }
+}
+
+### Measurements - Save bulk (studies schema, replace per study)
 POST {{baseUrl}}/api/v1/measurements
 Authorization: Bearer {{authToken}}
 Content-Type: application/json
 
 {
-  "study_instance_uid": "1.2.840.113619.2.55.3.604688175.827.1599878051.467",
-  "measurements": [
+  "studies": [
     {
-      "label": "Length",
-      "value": "23.5",
-      "unit": "mm",
-      "tool": "Length",
-      "captured_at": "2026-07-05T12:34:56Z",
-      "coordinates": { "x": 100, "y": 200 }
+      "study_instance_uid": "{{study_instance_uid}}",
+      "series": [
+        {
+          "series_id": "{{series_id}}",
+          "measurements": [
+            {
+              "label": "PA length",
+              "value": "12.4 mm",
+              "unit": "mm",
+              "tool": "Length",
+              "captured_at": "2026-07-05T12:34:56.000Z",
+              "dental_preset_id": "pa-length",
+              "viewer_state_id": "{{viewer_state_id}}",
+              "type": "PA_LENGTH",
+              "viewport": "top_left",
+              "image_id": "{{image_id}}",
+              "coordinates": {
+                "points": [[120, 200, 0], [300, 400, 0]],
+                "frame_of_reference_uid": "1.2.3",
+                "series_id": "{{series_id}}",
+                "sop_instance_uid": "1.2.392.200036.9125.0.19950720093509",
+                "referenced_image_id": "{{image_id}}",
+                "display_set_instance_uid": "d3345a1b-85b6-e2cf-4b51-28f2f46823bb",
+                "dental_preset_id": "pa-length"
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }
+
+### Measurements - Save bulk (flat format)
+POST {{baseUrl}}/api/v1/measurements
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "study_instance_uid": "{{study_instance_uid}}",
+  "measurements": [
+    {
+      "label": "Canal angle",
+      "value": "45 °",
+      "unit": "°",
+      "tool": "Angle",
+      "captured_at": "2026-07-05T12:34:56.000Z",
+      "dental_preset_id": "canal-angle",
+      "type": "CANAL_ANGLE",
+      "viewport": "top_right",
+      "series_id": "{{series_id}}",
+      "coordinates": {
+        "points": [[10, 20, 0], [30, 40, 0]],
+        "series_id": "{{series_id}}"
+      }
+    }
+  ]
+}
+
+### Measurements - Update metadata (rename)
+PATCH {{baseUrl}}/api/v1/measurements/{{measurement_id}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "action": "rename",
+  "label": "PA length updated"
+}
+
+### Measurements - Update metadata (lock)
+PATCH {{baseUrl}}/api/v1/measurements/{{measurement_id}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "action": "lock",
+  "is_locked": true
+}
+
+### Measurements - Update metadata (visible)
+PATCH {{baseUrl}}/api/v1/measurements/{{measurement_id}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "action": "visible"
+}
+
+### Measurements - Update metadata (hide)
+PATCH {{baseUrl}}/api/v1/measurements/{{measurement_id}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "action": "hide"
+}
+
+### Measurements - Update full payload (value, coordinates, etc.)
+PUT {{baseUrl}}/api/v1/measurements/{{measurement_id}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "label": "PA length",
+  "value": "13.1",
+  "unit": "mm",
+  "tool": "Length",
+  "type": "PA_LENGTH",
+  "viewport": "top_left",
+  "image_id": "{{image_id}}",
+  "dental_preset_id": "pa-length",
+  "coordinates": {
+    "points": [[120, 200, 0], [310, 410, 0]],
+    "series_id": "{{series_id}}",
+    "referenced_image_id": "{{image_id}}"
+  }
+}
+
+### Measurements - Bulk update
+PATCH {{baseUrl}}/api/v1/measurements/bulk
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "ids": ["{{measurement_id}}"],
+  "action": "lock",
+  "is_locked": true
+}
+
+### Measurements - Delete
+DELETE {{baseUrl}}/api/v1/measurements/{{measurement_id}}
+Authorization: Bearer {{authToken}}
+
+### Notes
+# All request/response fields use snake_case.
+# measurements table columns: id, study_instance_uid, series_id, user_id, viewer_state_id,
+# label, value, unit, tool, dental_preset_id, type, viewport, image_id (VARCHAR 512),
+# captured_at, coordinates, created_at, updated_at, ...
