@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import classNames from 'classnames';
 import { Button, Input, Label } from '@ohif/ui-next';
 import { zod4Resolver } from '../../../shared/utils/zod4Resolver';
 import { useDentalBranding } from '../../dental/hooks/useDentalBranding';
@@ -10,6 +11,12 @@ import { refreshDentalAuthHeaders } from '../services/authApi';
 import { loginSchema, type LoginFormValues } from '../schemas/login.schema';
 
 type DentalAppConfig = AppTypes.Config & { dentalPracticeName?: string; dentalPracticeLogo?: string };
+
+const loginFieldClassName = 'h-10 text-sm';
+const loginFieldErrorClassName =
+  'border-destructive focus-visible:ring-destructive/40 hover:border-destructive';
+const loginErrorBoxClassName =
+  'text-destructive rounded-lg border border-destructive/55 bg-destructive/15 px-3 py-2.5 text-sm leading-snug';
 
 function DentalLoginPage() {
   const navigate = useNavigate();
@@ -103,7 +110,11 @@ function DentalLoginPage() {
                 type="email"
                 autoComplete="username"
                 placeholder="you@practice.com"
-                className="h-10 text-sm"
+                aria-invalid={errors.email ? true : undefined}
+                className={classNames(
+                  loginFieldClassName,
+                  errors.email && loginFieldErrorClassName
+                )}
                 {...register('email')}
                 data-cy="dental-login-email"
               />
@@ -124,7 +135,11 @@ function DentalLoginPage() {
                 type="password"
                 autoComplete="current-password"
                 placeholder="Enter your password"
-                className="h-10 text-sm"
+                aria-invalid={errors.password ? true : undefined}
+                className={classNames(
+                  loginFieldClassName,
+                  errors.password && loginFieldErrorClassName
+                )}
                 {...register('password')}
                 data-cy="dental-login-password"
               />
@@ -134,13 +149,13 @@ function DentalLoginPage() {
             </div>
 
             {errors.root && (
-              <p
-                className="text-destructive rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm"
+              <div
+                className={loginErrorBoxClassName}
                 data-cy="dental-login-error"
                 role="alert"
               >
                 {errors.root.message}
-              </p>
+              </div>
             )}
 
             <Button
