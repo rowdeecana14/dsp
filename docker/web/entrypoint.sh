@@ -19,7 +19,7 @@ needs_install() {
 if [ -f pnpm-lock.yaml ]; then
   if needs_install; then
     echo "Installing dependencies (workspace)..."
-    pnpm install --frozen-lockfile
+    pnpm install --no-frozen-lockfile
   else
     echo "Dependencies look complete, skipping install."
   fi
@@ -30,7 +30,7 @@ fi
 # Re-check after install
 if needs_install; then
   echo "ERROR: node_modules is incomplete after install. Retrying with clean install..."
-  pnpm install --frozen-lockfile --force
+  pnpm install --no-frozen-lockfile --force
 fi
 
 if needs_install; then
