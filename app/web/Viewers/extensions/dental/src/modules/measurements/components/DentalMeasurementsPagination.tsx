@@ -10,7 +10,7 @@ import {
 import { dentalPanelMetaTextClassName } from '../../../shared/components/dentalPanelStyles';
 
 export const DENTAL_MEASUREMENTS_PAGE_SIZES = [5, 10, 20] as const;
-export const DENTAL_MEASUREMENTS_DEFAULT_PAGE_SIZE = 10;
+export { DENTAL_MEASUREMENTS_DEFAULT_PAGE_SIZE } from '../store/measurement.store';
 
 type DentalMeasurementsPaginationProps = {
   page: number;

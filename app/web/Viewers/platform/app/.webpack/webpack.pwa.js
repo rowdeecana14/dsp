@@ -24,7 +24,7 @@ const PROXY_PATH_REWRITE_FROM = process.env.PROXY_PATH_REWRITE_FROM;
 const PROXY_PATH_REWRITE_TO = process.env.PROXY_PATH_REWRITE_TO;
 const IS_COVERAGE = process.env.COVERAGE === 'true';
 
-const OHIF_PORT = Number(process.env.OHIF_PORT || 3000);
+const OHIF_PORT = Number(process.env.OHIF_PORT || 3001);
 const ENTRY_TARGET = process.env.ENTRY_TARGET || `${SRC_DIR}/index.js`;
 const dotenv = require('dotenv');
 dotenv.config();
@@ -191,9 +191,14 @@ module.exports = (env, argv) => {
       // compress: true,
       // http2: true,
       // https: true,
+      host: '0.0.0.0',
       open,
       port: OHIF_PORT,
       client: {
+        // Use the browser's host/port (e.g. localhost:8080 in Docker, :3001 locally).
+        // Default ws://localhost:3000/ws fails when the API occupies :3000 or when
+        // docker-compose maps WEB_PORT:3000.
+        webSocketURL: 'auto://0.0.0.0:0/ws',
         // During e2e (COVERAGE=true) disable the dev-server overlay: its
         // injected iframe intercepts pointer events and breaks Playwright/Cypress
         // clicks. Keep it for normal local dev.

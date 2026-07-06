@@ -73,6 +73,9 @@ services:
     ports:
       - '${WEB_PORT:-8080}:3000'
     environment:
+      APP_CONFIG: config/dental.js
+      OHIF_PORT: '3000'
+      OHIF_OPEN: 'false'
       REACT_APP_API_URL: http://localhost:3000/api/v1
       CYPRESS_INSTALL_BINARY: '0'
 

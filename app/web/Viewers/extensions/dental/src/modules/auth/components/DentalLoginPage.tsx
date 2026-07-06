@@ -1,13 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@ohif/ui-next';
+import { Button, Input, Label } from '@ohif/ui-next';
+import { zod4Resolver } from '../../../shared/utils/zod4Resolver';
 import { useAuth } from '../hooks/useAuth';
 import { refreshDentalAuthHeaders } from '../services/authApi';
 import { loginSchema, type LoginFormValues } from '../schemas/login.schema';
 
 type DentalAppConfig = AppTypes.Config & { dentalPracticeName?: string };
+
+const DENTAL_LOGO_PATH = 'assets/dental-logo.png';
 
 function DentalLoginPage() {
   const navigate = useNavigate();
@@ -18,14 +20,21 @@ function DentalLoginPage() {
     (typeof window !== 'undefined' && (window.config as DentalAppConfig)?.dentalPracticeName) ||
     'Dental Practice';
 
+  const logoSrc = useMemo(() => {
+    const publicUrl =
+      typeof window !== 'undefined' && window.PUBLIC_URL ? window.PUBLIC_URL : '/';
+    const base = publicUrl.endsWith('/') ? publicUrl : `${publicUrl}/`;
+    return `${base}${DENTAL_LOGO_PATH}`;
+  }, []);
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     setError,
   } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: 'admin@example.com', password: '' },
+    resolver: zod4Resolver(loginSchema),
+    defaultValues: { email: '', password: '' },
   });
 
   useEffect(() => {
@@ -53,78 +62,101 @@ function DentalLoginPage() {
 
   return (
     <div
-      className="bg-background flex min-h-screen items-center justify-center p-4"
+      className="bg-background relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-10"
       data-cy="dental-login-page"
     >
-      <div className="border-border bg-card w-full max-w-md rounded-lg border p-8 shadow-lg">
-        <h1 className="text-primary mb-1 text-2xl font-semibold">{practiceName}</h1>
-        <p className="text-muted-foreground mb-6 text-sm">Sign in to access the dental viewer</p>
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.12),transparent_55%)]"
+        aria-hidden
+      />
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col gap-4"
-        >
-          <div>
-            <label
-              htmlFor="dental-email"
-              className="text-foreground mb-1 block text-sm font-medium"
-            >
-              Email
-            </label>
-            <input
-              id="dental-email"
-              type="email"
-              autoComplete="username"
-              className="bg-input border-input text-foreground h-10 w-full rounded border px-3 text-sm"
-              {...register('email')}
-              data-cy="dental-login-email"
+      <div className="relative z-10 flex w-full max-w-md flex-col items-center">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="bg-card/40 border-border/50 mb-5 flex h-28 w-28 items-center justify-center rounded-2xl border p-3 shadow-sm backdrop-blur-sm">
+            <img
+              src={logoSrc}
+              alt=""
+              className="h-full w-full object-contain"
+              data-cy="dental-login-logo"
             />
-            {errors.email && (
-              <p className="text-destructive mt-1 text-xs">{errors.email.message}</p>
-            )}
           </div>
+          <h1 className="text-foreground text-2xl font-semibold tracking-tight">{practiceName}</h1>
+          <p className="text-muted-foreground mt-1.5 max-w-sm text-sm leading-relaxed">
+            Sign in to access the dental imaging viewer
+          </p>
+        </div>
 
-          <div>
-            <label
-              htmlFor="dental-password"
-              className="text-foreground mb-1 block text-sm font-medium"
-            >
-              Password
-            </label>
-            <input
-              id="dental-password"
-              type="password"
-              autoComplete="current-password"
-              className="bg-input border-input text-foreground h-10 w-full rounded border px-3 text-sm"
-              {...register('password')}
-              data-cy="dental-login-password"
-            />
-            {errors.password && (
-              <p className="text-destructive mt-1 text-xs">{errors.password.message}</p>
-            )}
-          </div>
-
-          {errors.root && (
-            <p
-              className="text-destructive text-sm"
-              data-cy="dental-login-error"
-            >
-              {errors.root.message}
-            </p>
-          )}
-
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full"
-            data-cy="dental-login-submit"
+        <div className="border-border/60 bg-card/95 w-full rounded-xl border p-6 shadow-lg backdrop-blur-sm sm:p-8">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex flex-col gap-4"
           >
-            {isSubmitting ? 'Signing in…' : 'Sign in'}
-          </Button>
-        </form>
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="dental-email"
+                className="text-sm font-medium"
+              >
+                Email
+              </Label>
+              <Input
+                id="dental-email"
+                type="email"
+                autoComplete="username"
+                placeholder="you@practice.com"
+                className="h-10 text-sm"
+                {...register('email')}
+                data-cy="dental-login-email"
+              />
+              {errors.email && (
+                <p className="text-destructive text-xs">{errors.email.message}</p>
+              )}
+            </div>
 
-        <p className="text-muted-foreground mt-4 text-center text-xs">
-          Demo: admin@example.com / change-me-strongly
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="dental-password"
+                className="text-sm font-medium"
+              >
+                Password
+              </Label>
+              <Input
+                id="dental-password"
+                type="password"
+                autoComplete="current-password"
+                placeholder="Enter your password"
+                className="h-10 text-sm"
+                {...register('password')}
+                data-cy="dental-login-password"
+              />
+              {errors.password && (
+                <p className="text-destructive text-xs">{errors.password.message}</p>
+              )}
+            </div>
+
+            {errors.root && (
+              <p
+                className="text-destructive rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm"
+                data-cy="dental-login-error"
+                role="alert"
+              >
+                {errors.root.message}
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="mt-1 h-10 w-full text-sm font-medium"
+              data-cy="dental-login-submit"
+            >
+              {isSubmitting ? 'Signing in…' : 'Sign in'}
+            </Button>
+          </form>
+        </div>
+
+        <p className="text-muted-foreground mt-5 text-center text-xs leading-relaxed">
+          Demo credentials: <span className="text-foreground/80">admin@example.com</span> /{' '}
+          <span className="text-foreground/80">change-me-strongly</span>
         </p>
       </div>
     </div>

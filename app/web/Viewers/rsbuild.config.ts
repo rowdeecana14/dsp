@@ -27,7 +27,7 @@ const PROXY_PATH_REWRITE_FROM = process.env.PROXY_PATH_REWRITE_FROM;
 const PROXY_PATH_REWRITE_TO = process.env.PROXY_PATH_REWRITE_TO;
 
 // Add port constant
-const OHIF_PORT = Number(process.env.OHIF_PORT || 3000);
+const OHIF_PORT = Number(process.env.OHIF_PORT || 3001);
 const OHIF_OPEN = process.env.OHIF_OPEN !== 'false';
 
 // Ignore node_modules except @cornerstonejs (symlinked local development).
@@ -162,8 +162,12 @@ export default defineConfig({
     },
   },
   server: {
+    host: '0.0.0.0',
     port: OHIF_PORT,
     open: OHIF_OPEN,
+    client: {
+      webSocketURL: 'auto://0.0.0.0:0/ws',
+    },
     // Configure proxy
     proxy: {
       '/dicomweb': {

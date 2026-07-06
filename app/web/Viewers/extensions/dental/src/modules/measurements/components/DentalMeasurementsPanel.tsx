@@ -1,5 +1,16 @@
 import React from 'react';
-import { Button, Icons, ScrollArea, Separator } from '@ohif/ui-next';
+import {
+  Button,
+  Icons,
+  Input,
+  ScrollArea,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Separator,
+} from '@ohif/ui-next';
 import DentalMeasurementList from './DentalMeasurementList';
 import DentalCheckboxLabel from './DentalCheckboxLabel';
 import DeleteMeasurementsDialog from './DeleteMeasurementsDialog';
@@ -9,12 +20,13 @@ import DentalMeasurementsFilterHeader from './DentalMeasurementsFilterHeader';
 import { DentalPanelLoader } from '../../../shared';
 import { DENTAL_MEASUREMENT_PRESETS } from '../../dental';
 import { useMeasurementsPanel } from '../hooks/useMeasurementsPanel';
+import type { SortField } from '../hooks/useMeasurementsPanel';
 import {
   dentalPanelDestructiveTextActionClassName,
-  dentalPanelInputClassName,
   dentalPanelMetaTextClassName,
   dentalPanelSectionClassName,
   dentalPanelScrollAreaClassName,
+  dentalPanelSelectTriggerClassName,
   dentalPanelTextActionClassName,
 } from '../../../shared/components/dentalPanelStyles';
 
@@ -104,52 +116,68 @@ function DentalMeasurementsPanel() {
 
       {panel.filtersExpanded && (
         <div className="border-border/60 flex flex-col gap-2 border-b px-3 py-2">
-          <input
+          <Input
             type="text"
             placeholder="Search label, value, tool..."
-            className={dentalPanelInputClassName}
+            className="h-8 text-xs"
             value={panel.filterText}
             onChange={e => panel.setFilterText(e.target.value)}
             data-cy="dental-measurement-search"
           />
 
-          <select
-            className={dentalPanelInputClassName}
+          <Select
             value={panel.presetFilter}
-            onChange={e => panel.setPresetFilter(e.target.value)}
-            data-cy="dental-preset-filter"
+            onValueChange={panel.setPresetFilter}
           >
-            <option value="all">All presets</option>
-            {DENTAL_MEASUREMENT_PRESETS.map(preset => (
-              <option
-                key={preset.id}
-                value={preset.id}
-              >
-                {preset.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger
+              className={dentalPanelSelectTriggerClassName}
+              aria-label="Filter by preset"
+              data-cy="dental-preset-filter"
+            >
+              <SelectValue placeholder="All presets" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All presets</SelectItem>
+              {DENTAL_MEASUREMENT_PRESETS.map(preset => (
+                <SelectItem
+                  key={preset.id}
+                  value={preset.id}
+                >
+                  {preset.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-          <select
-            className={dentalPanelInputClassName}
+          <Select
             value={panel.sortField}
-            onChange={e => panel.setSortField(e.target.value as 'label' | 'value' | 'date')}
-            data-cy="dental-sort-field"
+            onValueChange={value => panel.setSortField(value as SortField)}
           >
-            <option value="label">Sort: Label</option>
-            <option value="value">Sort: Value</option>
-            <option value="date">Sort: Date</option>
-          </select>
+            <SelectTrigger
+              className={dentalPanelSelectTriggerClassName}
+              aria-label="Sort measurements"
+              data-cy="dental-sort-field"
+            >
+              <SelectValue placeholder="Sort field" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="label">Sort: Label</SelectItem>
+              <SelectItem value="value">Sort: Value</SelectItem>
+              <SelectItem value="date">Sort: Date</SelectItem>
+            </SelectContent>
+          </Select>
 
           {panel.hasActiveFilters && (
-            <button
+            <Button
               type="button"
-              className="text-primary self-start text-[10px] font-medium leading-none hover:underline"
+              variant="link"
+              size="sm"
+              className="text-primary h-auto self-start px-0 text-[10px] font-medium leading-none"
               onClick={panel.clearFilters}
               data-cy="dental-clear-filters"
             >
               Clear filters
-            </button>
+            </Button>
           )}
         </div>
       )}

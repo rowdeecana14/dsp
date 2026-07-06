@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Button,
   Dialog,
@@ -9,9 +8,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Input,
   ScrollArea,
 } from '@ohif/ui-next';
-import { dentalPanelInputClassName, dentalPanelScrollAreaClassName } from '../../../shared/components/dentalPanelStyles';
+import { zod4Resolver } from '../../../shared/utils/zod4Resolver';
+import { dentalPanelScrollAreaClassName } from '../../../shared/components/dentalPanelStyles';
 import { editMeasurementsSchema } from '../schemas/measurement.schema';
 
 export type EditMeasurementItem = {
@@ -36,7 +37,7 @@ function EditMeasurementsDialog({
   onSave,
 }: EditMeasurementsDialogProps) {
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
-    resolver: zodResolver(editMeasurementsSchema),
+    resolver: zod4Resolver(editMeasurementsSchema),
     defaultValues: { items: [] as EditMeasurementItem[] },
   });
 
@@ -109,10 +110,10 @@ function EditMeasurementsDialog({
                     >
                       Name
                     </label>
-                    <input
+                    <Input
                       id={`dental-edit-label-${item.uid}`}
                       type="text"
-                      className={dentalPanelInputClassName}
+                      className="h-8 text-xs"
                       defaultValue={item.label}
                       {...register(`items.${index}.label` as const)}
                       disabled={isSaving}

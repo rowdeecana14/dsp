@@ -40,5 +40,7 @@ fi
 
 export APP_CONFIG="${APP_CONFIG:-config/dental.js}"
 export REACT_APP_API_URL="${REACT_APP_API_URL:-http://localhost:3000/api/v1}"
+# Inside Docker the dev server must listen on 3000 (mapped to host WEB_PORT, usually 8080).
+export OHIF_PORT="${OHIF_PORT:-3000}"
 
 exec pnpm run dev

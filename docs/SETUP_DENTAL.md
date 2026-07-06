@@ -120,17 +120,19 @@ pnpm run start:dev
 
 ```bash
 cd app/web/Viewers
-APP_CONFIG=config/dental.js pnpm run dev:dental
+pnpm run dev:local
 ```
 
-Or from the monorepo root:
+`dev:local` runs the viewer on **http://localhost:3001** so it does not conflict with the API on port 3000. (`pnpm run dev` without `:local` defaults to port 3001 via webpack when `OHIF_PORT` is unset.)
+
+Or from `platform/app`:
 
 ```bash
 cd app/web/Viewers
-pnpm run dev   # uses default config unless APP_CONFIG is set
+pnpm run dev:dental
 ```
 
-Use `dev:dental` to always load the dental config. The viewer dev server runs on **http://localhost:3001** (`OHIF_PORT=3001`) so it does not conflict with the NestJS API on port 3000. Open the URL printed in the terminal.
+Use `dev:dental` / `dev:local` to always load the dental config. Open **http://localhost:3001** for local dev.
 
 ## Production build
 
@@ -321,15 +323,22 @@ extensions/dental/src/
 
 This is the **rspack dev-server hot-reload** socket, not the dental API or DICOMweb.
 
-**Cause:** Port 3000 is used by the NestJS API (`app/api`). If the OHIF dev server also binds to 3000, or you open the viewer at the wrong port, the HMR client tries `ws://localhost:3000/ws` against the API (which has no `/ws` endpoint).
+**Cause:** The HMR client was defaulting to `ws://localhost:3000/ws`. That fails when:
 
-**Fix:**
+- You use **Docker** (`http://localhost:8080` → container port 3000) — the browser must use port **8080** for WebSocket, not 3000.
+- You run the **API on port 3000** locally and the viewer on **3001** — port 3000 is the NestJS API, which has no `/ws` endpoint.
 
-1. Run the API on **http://localhost:3000** and the viewer with `pnpm run dev:dental` on **http://localhost:3001** (default `OHIF_PORT=3001` in `dev` / `dev:dental` scripts).
-2. Restart the viewer dev server after pulling this change.
-3. Open **http://localhost:3001**, not :3000.
+**Fix (already in repo):** `webpack.pwa.js` sets `client.webSocketURL: 'auto://0.0.0.0:0/ws'` so HMR uses the same host/port as the page you opened.
 
-The warning is harmless if you are not actively using hot reload, but fixing the port split removes console noise.
+**What you should do:**
+
+1. **Restart** the viewer dev server (or `docker compose restart web`).
+2. Open the viewer at the URL it prints:
+   - Docker: **http://localhost:8080**
+   - Local dev: **http://localhost:3001**
+3. Hard-refresh the tab (or close old tabs on the wrong port).
+
+The warning is harmless if you do not need hot reload; fixing the URL removes the console noise.
 
 ### `Error: request failed` (dicomweb-client)
 

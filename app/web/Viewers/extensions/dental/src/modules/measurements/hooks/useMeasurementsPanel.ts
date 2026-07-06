@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { MeasurementPanelSortField } from '../store/measurement.store';
+import { getPanelUiState, useMeasurementStore } from '../store/measurement.store';
 import { useSystem } from '@ohif/core';
 import { useMeasurements } from '../../../../../cornerstone/src/hooks/useMeasurements';
 import { hasAuthToken } from '../../viewer/services/viewerStateApi';
@@ -34,9 +36,8 @@ import {
   showDentalSuccessNotification,
 } from '../../../shared/utils/dentalNotifications';
 import type { EditMeasurementItem } from '../components/EditMeasurementsDialog';
-import { DENTAL_MEASUREMENTS_DEFAULT_PAGE_SIZE } from '../components/DentalMeasurementsPagination';
 
-type SortField = 'label' | 'value' | 'date';
+type SortField = MeasurementPanelSortField;
 type PresetFilter = 'all' | (typeof DENTAL_MEASUREMENT_PRESETS)[number]['id'];
 
 function extractValue(measurement: Record<string, unknown>): string {
@@ -115,12 +116,116 @@ function useMeasurementsPanel() {
   const { studyInstanceUID } = useDentalViewportContext();
   const { displaySetService } = servicesManager.services;
 
-  const [filterText, setFilterText] = useState('');
-  const [presetFilter, setPresetFilter] = useState<PresetFilter>('all');
-  const [sortField, setSortField] = useState<SortField>('label');
-  const [sortAsc, setSortAsc] = useState(true);
+  const panelState = useMeasurementStore(state =>
+    getPanelUiState(state.panelStateByStudy, studyInstanceUID)
+  );
+  const {
+    filterText,
+    presetFilter: rawPresetFilter,
+    sortField,
+    sortAsc,
+    page,
+    pageSize,
+    selectedUids,
+    filtersExpanded,
+  } = panelState;
+  const presetFilter = rawPresetFilter as PresetFilter;
+
+  const storeSetFilterText = useMeasurementStore(state => state.setFilterText);
+  const storeSetPresetFilter = useMeasurementStore(state => state.setPresetFilter);
+  const storeSetSortField = useMeasurementStore(state => state.setSortField);
+  const storeSetPage = useMeasurementStore(state => state.setPage);
+  const storeSetPageSize = useMeasurementStore(state => state.setPageSize);
+  const storeSetFiltersExpanded = useMeasurementStore(state => state.setFiltersExpanded);
+  const storeSetSortAsc = useMeasurementStore(state => state.setSortAsc);
+  const storeSetSelectedUids = useMeasurementStore(state => state.setSelectedUids);
+
+  const requireStudy = useCallback(() => studyInstanceUID || null, [studyInstanceUID]);
+
+  const setFilterText = useCallback(
+    (text: string) => {
+      const uid = requireStudy();
+      if (uid) storeSetFilterText(uid, text);
+    },
+    [requireStudy, storeSetFilterText]
+  );
+
+  const setPresetFilter = useCallback(
+    (filter: PresetFilter) => {
+      const uid = requireStudy();
+      if (uid) storeSetPresetFilter(uid, filter);
+    },
+    [requireStudy, storeSetPresetFilter]
+  );
+
+  const setSortField = useCallback(
+    (field: SortField) => {
+      const uid = requireStudy();
+      if (uid) storeSetSortField(uid, field);
+    },
+    [requireStudy, storeSetSortField]
+  );
+
+  const setPage = useCallback(
+    (nextPage: number) => {
+      const uid = requireStudy();
+      if (uid) storeSetPage(uid, nextPage);
+    },
+    [requireStudy, storeSetPage]
+  );
+
+  const setPageSize = useCallback(
+    (size: number) => {
+      const uid = requireStudy();
+      if (uid) storeSetPageSize(uid, size);
+    },
+    [requireStudy, storeSetPageSize]
+  );
+
+  const setFiltersExpanded = useCallback(
+    (expanded: boolean) => {
+      const uid = requireStudy();
+      if (uid) storeSetFiltersExpanded(uid, expanded);
+    },
+    [requireStudy, storeSetFiltersExpanded]
+  );
+
+  const setSortAsc = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      const uid = requireStudy();
+      if (!uid) return;
+      const current = getPanelUiState(useMeasurementStore.getState().panelStateByStudy, uid).sortAsc;
+      const next = typeof value === 'function' ? value(current) : value;
+      storeSetSortAsc(uid, next);
+    },
+    [requireStudy, storeSetSortAsc]
+  );
+
+  const setSelectedUids = useCallback(
+    (value: Set<string> | ((prev: Set<string>) => Set<string>)) => {
+      const uid = requireStudy();
+      if (!uid) return;
+      const current = getPanelUiState(useMeasurementStore.getState().panelStateByStudy, uid)
+        .selectedUids;
+      const next = typeof value === 'function' ? value(current) : value;
+      storeSetSelectedUids(uid, next);
+    },
+    [requireStudy, storeSetSelectedUids]
+  );
+
+  const setFiltersExpandedWithUpdater = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      const uid = requireStudy();
+      if (!uid) return;
+      const current = getPanelUiState(useMeasurementStore.getState().panelStateByStudy, uid)
+        .filtersExpanded;
+      const next = typeof value === 'function' ? value(current) : value;
+      storeSetFiltersExpanded(uid, next);
+    },
+    [requireStudy, storeSetFiltersExpanded]
+  );
+
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  const [selectedUids, setSelectedUids] = useState<Set<string>>(() => new Set());
   const [selectedDetails, setSelectedDetails] = useState<Map<string, EditMeasurementItem>>(
     () => new Map()
   );
@@ -128,19 +233,23 @@ function useMeasurementsPanel() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSavingEdits, setIsSavingEdits] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DENTAL_MEASUREMENTS_DEFAULT_PAGE_SIZE);
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [listItems, setListItems] = useState<Record<string, unknown>[]>([]);
   const [listMeta, setListMeta] = useState<ApiPaginationMeta | null>(null);
   const [isLoadingList, setIsLoadingList] = useState(false);
-  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [persistenceState, setPersistenceState] = useState<DentalPersistenceState>(() =>
     getDentalPersistenceState()
   );
 
   const useApiList = hasAuthToken() && !!studyInstanceUID;
   const showDelayedListLoading = useDelayedLoading(isLoadingList);
+
+  useEffect(() => {
+    setDebouncedSearch(filterText.trim());
+    setSelectedDetails(new Map());
+    setConfirmDeleteOpen(false);
+    setEditDialogOpen(false);
+  }, [studyInstanceUID]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -645,7 +754,7 @@ function useMeasurementsPanel() {
     pageSize,
     setPageSize,
     filtersExpanded,
-    setFiltersExpanded,
+    setFiltersExpanded: setFiltersExpandedWithUpdater,
     displayMeasurements,
     paginationMeta,
     pageOffset,

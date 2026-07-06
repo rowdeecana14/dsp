@@ -2,6 +2,60 @@ import { create } from 'zustand';
 import type { SyncStatus } from '../../../shared/types';
 import type { DentalMeasurementExport, ViewerStateRecord } from '../types/measurement.types';
 
+export const DENTAL_MEASUREMENTS_DEFAULT_PAGE_SIZE = 10;
+
+export type MeasurementPanelSortField = 'label' | 'value' | 'date';
+
+export type MeasurementPanelUiState = {
+  filterText: string;
+  presetFilter: string;
+  sortField: MeasurementPanelSortField;
+  sortAsc: boolean;
+  page: number;
+  pageSize: number;
+  selectedUids: Set<string>;
+  filtersExpanded: boolean;
+};
+
+export function createDefaultPanelUiState(): MeasurementPanelUiState {
+  return {
+    filterText: '',
+    presetFilter: 'all',
+    sortField: 'label',
+    sortAsc: true,
+    page: 1,
+    pageSize: DENTAL_MEASUREMENTS_DEFAULT_PAGE_SIZE,
+    selectedUids: new Set(),
+    filtersExpanded: false,
+  };
+}
+
+const DEFAULT_PANEL_UI_STATE = createDefaultPanelUiState();
+
+export function getPanelUiState(
+  panelStateByStudy: Record<string, MeasurementPanelUiState>,
+  studyInstanceUID: string | null | undefined
+): MeasurementPanelUiState {
+  if (!studyInstanceUID) {
+    return DEFAULT_PANEL_UI_STATE;
+  }
+  return panelStateByStudy[studyInstanceUID] ?? DEFAULT_PANEL_UI_STATE;
+}
+
+function patchStudyPanelState(
+  panelStateByStudy: Record<string, MeasurementPanelUiState>,
+  studyInstanceUID: string,
+  patch: Partial<MeasurementPanelUiState>
+): Record<string, MeasurementPanelUiState> {
+  return {
+    ...panelStateByStudy,
+    [studyInstanceUID]: {
+      ...getPanelUiState(panelStateByStudy, studyInstanceUID),
+      ...patch,
+    },
+  };
+}
+
 export type MeasurementPersistenceState = {
   syncStatus: SyncStatus;
   lastSyncedAt: number | null;
@@ -27,37 +81,22 @@ const initialPersistenceState: MeasurementPersistenceState = {
 };
 
 interface MeasurementStoreState extends MeasurementPersistenceState {
-  // Panel UI state
-  filterText: string;
-  presetFilter: string;
-  sortField: 'label' | 'value' | 'date';
-  sortAsc: boolean;
-  page: number;
-  pageSize: number;
-  selectedUids: Set<string>;
-  filtersExpanded: boolean;
+  panelStateByStudy: Record<string, MeasurementPanelUiState>;
   patchPersistence: (patch: Partial<MeasurementPersistenceState>) => void;
-  setFilterText: (text: string) => void;
-  setPresetFilter: (filter: string) => void;
-  setSortField: (field: 'label' | 'value' | 'date') => void;
-  setSortAsc: (asc: boolean) => void;
-  setPage: (page: number) => void;
-  setPageSize: (size: number) => void;
-  setSelectedUids: (uids: Set<string>) => void;
-  setFiltersExpanded: (expanded: boolean) => void;
+  setFilterText: (studyInstanceUID: string, filterText: string) => void;
+  setPresetFilter: (studyInstanceUID: string, presetFilter: string) => void;
+  setSortField: (studyInstanceUID: string, field: MeasurementPanelSortField) => void;
+  setSortAsc: (studyInstanceUID: string, sortAsc: boolean) => void;
+  setPage: (studyInstanceUID: string, page: number) => void;
+  setPageSize: (studyInstanceUID: string, pageSize: number) => void;
+  setSelectedUids: (studyInstanceUID: string, selectedUids: Set<string>) => void;
+  setFiltersExpanded: (studyInstanceUID: string, filtersExpanded: boolean) => void;
   reset: () => void;
 }
 
 export const useMeasurementStore = create<MeasurementStoreState>(set => ({
   ...initialPersistenceState,
-  filterText: '',
-  presetFilter: 'all',
-  sortField: 'label',
-  sortAsc: true,
-  page: 1,
-  pageSize: 25,
-  selectedUids: new Set(),
-  filtersExpanded: false,
+  panelStateByStudy: {},
 
   patchPersistence: patch =>
     set(state => ({
@@ -65,26 +104,64 @@ export const useMeasurementStore = create<MeasurementStoreState>(set => ({
       ...patch,
     })),
 
-  setFilterText: filterText => set({ filterText }),
-  setPresetFilter: presetFilter => set({ presetFilter }),
-  setSortField: sortField => set({ sortField }),
-  setSortAsc: sortAsc => set({ sortAsc }),
-  setPage: page => set({ page }),
-  setPageSize: pageSize => set({ pageSize }),
-  setSelectedUids: selectedUids => set({ selectedUids }),
-  setFiltersExpanded: filtersExpanded => set({ filtersExpanded }),
+  setFilterText: (studyInstanceUID, filterText) =>
+    set(state => ({
+      panelStateByStudy: patchStudyPanelState(state.panelStateByStudy, studyInstanceUID, {
+        filterText,
+      }),
+    })),
+
+  setPresetFilter: (studyInstanceUID, presetFilter) =>
+    set(state => ({
+      panelStateByStudy: patchStudyPanelState(state.panelStateByStudy, studyInstanceUID, {
+        presetFilter,
+      }),
+    })),
+
+  setSortField: (studyInstanceUID, sortField) =>
+    set(state => ({
+      panelStateByStudy: patchStudyPanelState(state.panelStateByStudy, studyInstanceUID, {
+        sortField,
+      }),
+    })),
+
+  setSortAsc: (studyInstanceUID, sortAsc) =>
+    set(state => ({
+      panelStateByStudy: patchStudyPanelState(state.panelStateByStudy, studyInstanceUID, {
+        sortAsc,
+      }),
+    })),
+
+  setPage: (studyInstanceUID, page) =>
+    set(state => ({
+      panelStateByStudy: patchStudyPanelState(state.panelStateByStudy, studyInstanceUID, { page }),
+    })),
+
+  setPageSize: (studyInstanceUID, pageSize) =>
+    set(state => ({
+      panelStateByStudy: patchStudyPanelState(state.panelStateByStudy, studyInstanceUID, {
+        pageSize,
+      }),
+    })),
+
+  setSelectedUids: (studyInstanceUID, selectedUids) =>
+    set(state => ({
+      panelStateByStudy: patchStudyPanelState(state.panelStateByStudy, studyInstanceUID, {
+        selectedUids,
+      }),
+    })),
+
+  setFiltersExpanded: (studyInstanceUID, filtersExpanded) =>
+    set(state => ({
+      panelStateByStudy: patchStudyPanelState(state.panelStateByStudy, studyInstanceUID, {
+        filtersExpanded,
+      }),
+    })),
 
   reset: () =>
     set({
       ...initialPersistenceState,
-      filterText: '',
-      presetFilter: 'all',
-      sortField: 'label',
-      sortAsc: true,
-      page: 1,
-      pageSize: 25,
-      selectedUids: new Set(),
-      filtersExpanded: false,
+      panelStateByStudy: {},
     }),
 }));
 

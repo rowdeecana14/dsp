@@ -2,6 +2,10 @@
 export const dentalPanelInputClassName =
   'bg-input/80 border-border/60 text-foreground placeholder:text-neutral h-8 w-full rounded-md border px-2.5 text-xs shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/40';
 
+/** ui-next SelectTrigger styling for dental side panels. */
+export const dentalPanelSelectTriggerClassName =
+  'border-border/60 bg-background text-foreground h-8 w-full text-xs shadow-none';
+
 export const dentalPanelSectionClassName =
   'border-border/60 bg-muted/10 rounded-lg border';
 
