@@ -1,0 +1,26 @@
+FROM node:24.15.0-slim AS builder
+
+WORKDIR /usr/src/web
+
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates git \
+    && rm -rf /var/lib/apt/lists/* \
+    && corepack enable && corepack prepare pnpm@11.5.2 --activate
+
+COPY app/web/Viewers/ /usr/src/web/
+
+ARG REACT_APP_API_URL=http://localhost:3000/api/v1
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+ENV APP_CONFIG=config/dental.js
+ENV CYPRESS_INSTALL_BINARY=0
+
+RUN pnpm install --frozen-lockfile \
+    && pnpm run build
+
+FROM nginx:1.27-alpine
+
+COPY docker/web/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /usr/src/web/platform/app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
