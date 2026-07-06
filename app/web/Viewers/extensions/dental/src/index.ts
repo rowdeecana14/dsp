@@ -1,0 +1,57 @@
+import { Types } from '@ohif/core';
+import { ActiveThemeProvider } from '@ohif/ui-next';
+
+import { id } from './id';
+import getHangingProtocolModule from './app/modules/getHangingProtocolModule';
+import getCustomizationModule from './app/modules/getCustomizationModule';
+import getPanelModule from './app/modules/getPanelModule';
+import getCommandsModule from './app/modules/getCommandsModule';
+import getToolbarModule from './app/modules/getToolbarModule';
+import getLayoutTemplateModule from './app/modules/getLayoutTemplateModule';
+import isBitewingSeries from './custom-attributes/isBitewingSeries';
+import bitewingSide from './custom-attributes/bitewingSide';
+import sameModalityAsCurrent from './custom-attributes/sameModalityAsCurrent';
+
+const dentalExtension: Types.Extensions.Extension = {
+  id,
+
+  preRegistration: ({ servicesManager, serviceProvidersManager, appConfig }: Types.Extensions.ExtensionParams) => {
+    const { hangingProtocolService, measurementService } = servicesManager.services;
+    measurementService.addMeasurementSchemaKeys('dentalPresetId');
+
+    hangingProtocolService.addCustomAttribute(
+      'isBitewingSeries',
+      'Whether the series is a bitewing',
+      isBitewingSeries
+    );
+    hangingProtocolService.addCustomAttribute(
+      'bitewingSide',
+      'Left or right bitewing side',
+      bitewingSide
+    );
+    hangingProtocolService.addCustomAttribute(
+      'sameModalityAsCurrent',
+      'Same modality as current viewport series',
+      sameModalityAsCurrent
+    );
+
+    const hasThemeModule =
+      Array.isArray(appConfig?.customizationService) &&
+      appConfig.customizationService.some(
+        (ref: string) => typeof ref === 'string' && ref.includes('customizationModule.theme')
+      );
+
+    if (hasThemeModule) {
+      serviceProvidersManager.registerProvider('activeTheme', ActiveThemeProvider);
+    }
+  },
+
+  getHangingProtocolModule,
+  getCustomizationModule,
+  getPanelModule,
+  getCommandsModule,
+  getToolbarModule,
+  getLayoutTemplateModule,
+};
+
+export default dentalExtension;

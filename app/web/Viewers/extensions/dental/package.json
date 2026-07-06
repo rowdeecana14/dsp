@@ -1,0 +1,41 @@
+{
+  "name": "@ohif/extension-dental",
+  "version": "3.13.0-beta.110",
+  "description": "Dental practice UI, hanging protocol, and measurement presets for OHIF",
+  "author": "DSP",
+  "license": "MIT",
+  "main": "dist/ohif-extension-dental.umd.js",
+  "module": "src/index.ts",
+  "engines": {
+    "node": ">=24"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "clean": "shx rm -rf dist",
+    "dev": "cross-env NODE_ENV=development rspack build --config .webpack/webpack.dev.js --watch",
+    "build": "cross-env NODE_ENV=production rspack build --config .webpack/webpack.prod.js",
+    "start": "pnpm run dev"
+  },
+  "peerDependencies": {
+    "@ohif/core": "workspace:*",
+    "@ohif/extension-cornerstone": "workspace:*",
+    "@ohif/extension-default": "workspace:*",
+    "@ohif/ui-next": "workspace:*",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "dependencies": {
+    "@babel/runtime": "7.29.7",
+    "@hookform/resolvers": "^3.10.0",
+    "classnames": "2.5.1",
+    "react-hook-form": "^7.54.2",
+    "zod": "^4.4.3",
+    "zustand": "4.5.5"
+  },
+  "devDependencies": {
+    "cross-env": "7.0.3"
+  }
+}
