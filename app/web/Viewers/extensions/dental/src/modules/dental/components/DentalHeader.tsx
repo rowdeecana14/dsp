@@ -10,7 +10,6 @@ import {
   ToolButton,
 } from '@ohif/ui-next';
 import { IconPresentationProvider } from '@ohif/ui-next';
-import NavBar from '../../../../../../platform/ui-next/src/components/NavBar';
 import DentalToothIcon from './DentalToothIcon';
 
 interface DentalHeaderProps {
@@ -52,16 +51,19 @@ function DentalHeader({
       size="large"
       IconContainer={ToolButton}
     >
-      <NavBar
-        isSticky={isSticky}
-        className="border-border/80 border-b"
+      <header
+        className={classNames(
+          'bg-background border-border/80 z-20 w-full shrink-0 border-b',
+          isSticky && 'sticky top-0',
+          !isSticky && 'relative'
+        )}
         data-cy="practice-header"
         {...props}
       >
-        <div className="bg-background/95 flex h-14 items-stretch backdrop-blur-sm">
+        <div className="bg-background/95 flex h-14 w-full items-stretch backdrop-blur-sm">
           <div
             className={classNames(
-              'border-border/60 flex shrink-0 items-center gap-2.5 border-r px-4',
+              'border-border/60 flex shrink-0 items-center gap-2 border-r pl-2.5 pr-4',
               isReturnEnabled && 'cursor-pointer'
             )}
             onClick={onClickReturn}
@@ -72,7 +74,7 @@ function DentalHeader({
             )}
             <DentalToothIcon className="text-primary h-6 w-6 shrink-0" />
             <p
-              className="text-foreground max-w-[220px] truncate text-sm font-semibold leading-tight tracking-wide"
+              className="text-foreground max-w-[200px] truncate text-sm font-semibold leading-tight tracking-wide sm:max-w-[240px]"
               data-cy="practice-name"
               title={practiceName}
             >
@@ -80,11 +82,11 @@ function DentalHeader({
             </p>
           </div>
 
-          <div className="flex min-w-0 flex-1 items-center gap-5 overflow-x-auto px-5">
+          <div className="flex min-w-0 flex-1 items-center gap-4 overflow-hidden px-3">
             {practiceBar}
           </div>
 
-          <div className="border-border/60 flex shrink-0 items-center gap-2 border-l px-3">
+          <div className="border-border/60 flex shrink-0 items-center gap-1 border-l pl-2 pr-1.5">
             {UndoRedo}
             {headerActions}
             <DropdownMenu>
@@ -92,7 +94,7 @@ function DentalHeader({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-muted-foreground hover:text-primary hover:bg-muted/60 h-9 w-9"
+                  className="text-muted-foreground hover:text-primary hover:bg-muted/60 h-9 w-9 shrink-0"
                 >
                   <Icons.GearSettings className="h-4 w-4" />
                 </Button>
@@ -117,10 +119,12 @@ function DentalHeader({
           </div>
         </div>
 
-        <div className="bg-muted/15 border-border/60 relative flex h-12 items-center justify-center overflow-x-auto px-4">
-          {children}
-        </div>
-      </NavBar>
+        {children ? (
+          <div className="bg-muted/20 border-border/50 flex h-12 w-full items-center justify-center overflow-hidden border-t">
+            {children}
+          </div>
+        ) : null}
+      </header>
     </IconPresentationProvider>
   );
 }

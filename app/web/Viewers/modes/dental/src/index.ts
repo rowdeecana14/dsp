@@ -1,3 +1,4 @@
+import update from 'immutability-helper';
 import i18n from 'i18next';
 import { ToolbarService } from '@ohif/core';
 import { id } from './id';
@@ -32,101 +33,114 @@ const extensionDependencies = {
   '@ohif/extension-dental': '^3.0.0',
 };
 
-function modeFactory({ modeConfiguration }) {
-  let _activatePanelTriggersSubscriptions = [];
+const modeInstance = {
+  id,
+  routeName: 'dental',
+  displayName: i18n.t('Dental Mode'),
+  hide: false,
+  _activatePanelTriggersSubscriptions: [] as Array<{ unsubscribe: () => void }>,
+  onModeEnter({
+    servicesManager,
+    extensionManager,
+    commandsManager,
+  }: withAppTypes) {
+    const { measurementService, toolbarService, toolGroupService, customizationService } =
+      servicesManager.services;
 
-  return {
-    id,
-    routeName: 'dental',
-    displayName: i18n.t('Dental Mode'),
-    onModeEnter: ({ servicesManager, extensionManager, commandsManager, customizationService }: withAppTypes) => {
-      const { measurementService, toolbarService, toolGroupService } = servicesManager.services;
+    measurementService.clearMeasurements();
+    initToolGroups(extensionManager, toolGroupService, commandsManager);
+    toolbarService.register(toolbarButtons);
 
-      measurementService.clearMeasurements();
-      initToolGroups(extensionManager, toolGroupService, commandsManager);
-      toolbarService.register(toolbarButtons);
+    toolbarService.updateSection(TOOLBAR_SECTIONS.primary, [
+      'DentalMeasurementsPalette',
+      'MeasurementTools',
+      'Zoom',
+      'Pan',
+      'WindowLevel',
+      'Layout',
+      'MoreTools',
+    ]);
 
-      toolbarService.updateSection(TOOLBAR_SECTIONS.primary, [
-        'DentalMeasurementsPalette',
-        'MeasurementTools',
-        'Zoom',
-        'Pan',
-        'WindowLevel',
-        'Layout',
-        'MoreTools',
-      ]);
+    toolbarService.updateSection(TOOLBAR_SECTIONS.measurementSection, ['Length', 'Angle']);
 
-      toolbarService.updateSection(TOOLBAR_SECTIONS.measurementSection, ['Length', 'Angle']);
+    toolbarService.updateSection(TOOLBAR_SECTIONS.moreToolsSection, ['Reset', 'StackScroll']);
 
-      toolbarService.updateSection(TOOLBAR_SECTIONS.moreToolsSection, ['Reset', 'StackScroll']);
-
-      customizationService.setCustomizations(
-        {
-          'panelSegmentation.disableEditing': { $set: true },
-        },
-        'mode'
-      );
-
-      commandsManager.runCommand('applyDentalTheme', {}, 'DEFAULT');
-      commandsManager.runCommand('initDentalMeasurementLabeling', {}, 'DEFAULT');
-    },
-    onModeExit: ({ servicesManager, commandsManager }: withAppTypes) => {
-      const {
-        toolGroupService,
-        syncGroupService,
-        segmentationService,
-        cornerstoneViewportService,
-        uiDialogService,
-        uiModalService,
-      } = servicesManager.services;
-
-      _activatePanelTriggersSubscriptions.forEach(sub => sub.unsubscribe());
-      _activatePanelTriggersSubscriptions = [];
-
-      commandsManager.runCommand('destroyDentalViewerSync', {}, 'DEFAULT');
-
-      uiDialogService.hideAll();
-      uiModalService.hide();
-      toolGroupService.destroy();
-      syncGroupService.destroy();
-      segmentationService.destroy();
-      cornerstoneViewportService.destroy();
-    },
-    validationTags: { study: [], series: [] },
-    isValidMode: () => ({
-      valid: true,
-      description: 'Dental mode available for all studies',
-    }),
-    routes: [
+    customizationService.setCustomizations(
       {
-        path: 'dental',
-        layoutTemplate: () => ({
-          id: ohif.layout,
-          props: {
-            leftPanels: [ohif.thumbnailList],
-            leftPanelResizable: true,
-            rightPanels: [dental.measurements],
-            rightPanelClosed: false,
-            rightPanelResizable: true,
-            viewports: [
-              {
-                namespace: cornerstone.viewport,
-                displaySetsToDisplay: [ohif.sopClassHandler],
-              },
-              {
-                namespace: dicomsr.viewport,
-                displaySetsToDisplay: [dicomsr.sopClassHandler],
-              },
-            ],
-          },
-        }),
+        'panelSegmentation.disableEditing': { $set: true },
       },
-    ],
-    extensions: extensionDependencies,
-    hangingProtocol: '@ohif/hpDental2x2',
-    sopClassHandlers: [ohif.sopClassHandler, dicomsr.sopClassHandler],
-    ...modeConfiguration,
-  };
+      'mode'
+    );
+
+    commandsManager.runCommand('applyDentalTheme', {}, 'DEFAULT');
+    commandsManager.runCommand('initDentalMeasurementLabeling', {}, 'DEFAULT');
+  },
+  onModeExit({ servicesManager, commandsManager }: withAppTypes) {
+    const {
+      toolGroupService,
+      syncGroupService,
+      segmentationService,
+      cornerstoneViewportService,
+      uiDialogService,
+      uiModalService,
+    } = servicesManager.services;
+
+    this._activatePanelTriggersSubscriptions.forEach(sub => sub.unsubscribe());
+    this._activatePanelTriggersSubscriptions = [];
+
+    commandsManager.runCommand('destroyDentalViewerSync', {}, 'DEFAULT');
+
+    uiDialogService.hideAll();
+    uiModalService.hide();
+    toolGroupService.destroy();
+    syncGroupService.destroy();
+    segmentationService.destroy();
+    cornerstoneViewportService.destroy();
+  },
+  validationTags: { study: [], series: [] },
+  isValidMode: () => ({
+    valid: true,
+    description: 'Dental mode available for all studies',
+  }),
+  routes: [
+    {
+      path: 'dental',
+      layoutTemplate: () => ({
+        id: ohif.layout,
+        props: {
+          leftPanels: [ohif.thumbnailList],
+          leftPanelResizable: true,
+          rightPanels: [dental.measurements],
+          rightPanelClosed: false,
+          rightPanelResizable: true,
+          viewports: [
+            {
+              namespace: cornerstone.viewport,
+              displaySetsToDisplay: [ohif.sopClassHandler],
+            },
+            {
+              namespace: dicomsr.viewport,
+              displaySetsToDisplay: [dicomsr.sopClassHandler],
+            },
+          ],
+        },
+      }),
+    },
+  ],
+  extensions: extensionDependencies,
+  hangingProtocol: '@ohif/hpDental2x2',
+  sopClassHandlers: [ohif.sopClassHandler, dicomsr.sopClassHandler],
+};
+
+/**
+ * Apply app-config modesConfiguration patches (hide, isValidMode, etc.) via
+ * immutability-helper — do not spread modeConfiguration onto the mode object.
+ */
+function modeFactory({ modeConfiguration }: { modeConfiguration?: Record<string, unknown> }) {
+  if (modeConfiguration) {
+    return update(modeInstance, modeConfiguration);
+  }
+  return modeInstance;
 }
 
 const mode = {

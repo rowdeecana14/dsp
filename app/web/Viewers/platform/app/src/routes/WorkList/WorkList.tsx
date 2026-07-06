@@ -85,6 +85,10 @@ export default function WorkList({
         <div className="flex min-h-0 flex-1 flex-col">
           <StudyList
             loadedModes={appConfig?.loadedModes ?? []}
+            defaultWorkflowModeId={
+              (appConfig as { defaultWorkflowModeId?: string } | undefined)
+                ?.defaultWorkflowModeId
+            }
             preserveQueryParameters={preserveQueryParameters}
             dataPath={dataPath}
             isPreviewOpen={isPreviewOpen}

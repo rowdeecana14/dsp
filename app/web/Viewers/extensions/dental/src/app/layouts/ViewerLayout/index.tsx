@@ -142,14 +142,11 @@ function DentalViewerLayout({
   const viewportComponents = viewports.map(getViewportComponentData);
 
   return (
-    <div>
+    <div className="bg-background flex h-screen w-full min-w-0 flex-col overflow-hidden">
       <DentalThemeBridge />
       <DentalStudySync />
       <PracticeHeader appConfig={appConfig} />
-      <div
-        className="relative flex w-full flex-row flex-nowrap items-stretch overflow-hidden bg-background"
-        style={{ height: 'calc(100vh - 104px)' }}
-      >
+      <div className="relative flex min-h-0 w-full flex-1 flex-row flex-nowrap items-stretch overflow-hidden">
         <React.Fragment>
           {showLoadingIndicator && <LoadingIndicatorProgress className="h-full w-full bg-background" />}
           <ResizablePanelGroup {...resizablePanelGroupProps}>

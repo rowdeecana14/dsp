@@ -51,6 +51,8 @@ type WorkflowsProviderProps = {
   loadedModes: Mode[];
   /** Optional data path prefix for routes (e.g., '/dicomweb') */
   dataPath?: string;
+  /** App-config default workflow when localStorage has no selection */
+  defaultWorkflowModeId?: string;
   /** Function to preserve query parameters when launching workflows */
   preserveQueryParameters: (query: URLSearchParams) => void;
   children: React.ReactNode;
@@ -63,6 +65,7 @@ type WorkflowsProviderProps = {
 export function WorkflowsProvider({
   loadedModes,
   dataPath,
+  defaultWorkflowModeId,
   preserveQueryParameters,
   children,
 }: WorkflowsProviderProps) {
@@ -75,7 +78,7 @@ export function WorkflowsProvider({
 
   // Use localStorage-backed hook for persistence
   const [storedDefaultWorkflowId, setStoredDefaultWorkflowId] =
-    useDefaultWorkflow(validWorkflowIds);
+    useDefaultWorkflow(validWorkflowIds, defaultWorkflowModeId);
 
   // Convert null to undefined for consistency with context type
   const defaultWorkflowId = storedDefaultWorkflowId ?? undefined;

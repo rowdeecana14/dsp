@@ -3,11 +3,18 @@ import * as React from 'react';
 /**
  * Persist and retrieve a default workflow string from localStorage.
  * If `allowed` is provided, the returned value is guaranteed to be from the allowed list (or null).
+ * `configDefaultId` is used when nothing is stored yet (e.g. dental.js → @ohif/mode-dental).
  */
 export function useDefaultWorkflow(
-  allowed?: readonly string[]
+  allowed?: readonly string[],
+  configDefaultId?: string | null
 ): [string | null, (next: string | null) => void] {
   const storageKey = 'studyList.defaultWorkflow';
+  const resolvedConfigDefault =
+    configDefaultId && (!allowed || allowed.includes(configDefaultId))
+      ? configDefaultId
+      : null;
+
   const [value, setValue] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -20,12 +27,16 @@ export function useDefaultWorkflow(
           } else {
             setValue(null);
           }
+          return;
+        }
+        if (resolvedConfigDefault) {
+          setValue(resolvedConfigDefault);
         }
       }
     } catch {
       // no-op
     }
-  }, [allowed]);
+  }, [allowed, resolvedConfigDefault]);
 
   const setAndPersist = React.useCallback(
     (next: string | null) => {

@@ -121,6 +121,7 @@ declare global {
         days?: number;
       };
       groupEnabledModesFirst?: boolean;
+      defaultWorkflowModeId?: string;
       measurementTrackingMode?: 'standard' | 'simplified' | 'none';
       disableConfirmationPrompts?: boolean;
       showPatientInfo?: 'visible' | 'visibleCollapsed' | 'disabled' | 'visibleReadOnly';

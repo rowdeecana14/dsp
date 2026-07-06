@@ -102,42 +102,43 @@ function PracticeHeader({ appConfig }: PracticeHeaderProps) {
       isReturnEnabled={!!appConfig.showStudyList}
       onClickReturnButton={onClickReturnButton}
       practiceBar={
-        <>
+        <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden sm:gap-4 lg:gap-5">
           <DentalPatientStrip />
-
           <HeaderDivider />
-
           <ToothSelector
             selectedTooth={selectedTooth}
             toothSystem={toothSystem}
             onToothChange={onToothChange}
             onSystemChange={onSystemChange}
           />
-        </>
+        </div>
       }
       headerActions={<ThemeToggle onThemeChange={onThemeChange} />}
       UndoRedo={
-        <div className="text-muted-foreground flex items-center">
-          <Button
-            variant="ghost"
-            className="hover:bg-muted/60 hover:text-primary h-9 w-9"
-            data-cy="undo-btn"
-            onClick={() => commandsManager.run('undo')}
-          >
-            <Icons.Undo className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            className="hover:bg-muted/60 hover:text-primary h-9 w-9"
-            data-cy="redo-btn"
-            onClick={() => commandsManager.run('redo')}
-          >
-            <Icons.Redo className="h-4 w-4" />
-          </Button>
-        </div>
+        <>
+          <div className="bg-border/60 mx-1 hidden h-7 w-px shrink-0 lg:block" aria-hidden />
+          <div className="text-muted-foreground flex shrink-0 items-center">
+            <Button
+              variant="ghost"
+              className="hover:bg-muted/60 hover:text-primary h-9 w-9"
+              data-cy="undo-btn"
+              onClick={() => commandsManager.run('undo')}
+            >
+              <Icons.Undo className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              className="hover:bg-muted/60 hover:text-primary h-9 w-9"
+              data-cy="redo-btn"
+              onClick={() => commandsManager.run('redo')}
+            >
+              <Icons.Redo className="h-4 w-4" />
+            </Button>
+          </div>
+        </>
       }
     >
-      <div className="relative flex min-w-0 justify-center gap-1">
+      <div className="flex h-full w-full min-w-0 items-center justify-center overflow-hidden px-2">
         <Toolbar buttonSection="primary" />
       </div>
     </DentalHeader>

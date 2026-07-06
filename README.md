@@ -134,12 +134,14 @@ Use **Logout** in the practice header menu to sign out.
 ## Using Dental Mode
 
 1. Sign in at `/login`.
-2. Open the study list and select a study (or use a direct viewer URL with `StudyInstanceUIDs`).
-3. **Dental Mode** is the default mode when using `config/dental.js`.
+2. Open the study list and **select a study** (single click).
+3. In the preview panel, click **Dental Mode** under **Launch workflow**, or double-click the row when dental is the default workflow (`defaultWorkflowModeId` in `config/dental.js`).
 4. Toggle **Dental / Standard** theme in the practice header.
 5. Select a tooth and numbering system (FDI / Universal).
 6. Click **Measurements** → pick a preset → draw on the viewport.
 7. Review measurements in the right panel; filter, sort, **Export JSON**, or **Save to Server**.
+
+See [docs/SETUP_DENTAL.md](docs/SETUP_DENTAL.md) for troubleshooting (theme errors, mode not listed, appearance dialog).
 
 ### Hanging Protocol Layout
 
@@ -160,7 +162,8 @@ For prior-exam comparison, open a study URL with two `StudyInstanceUIDs` (curren
 - [ ] `docker compose up` — viewer at :8080, API at :3000
 - [ ] `/login` gate — unauthenticated users cannot access study list
 - [ ] Practice header shows practice name, patient info, tooth selector
-- [ ] Theme toggle switches dental teal palette
+- [ ] Study list shows **Dental Mode** after selecting a study
+- [ ] Theme toggle and Appearance menu work without `useActiveTheme` errors
 - [ ] 2×2 grid loads (top row images; bottom bitewing slots may be empty without bitewing DICOM)
 - [ ] Measurements palette activates Length/Angle tools with dental labels
 - [ ] Panel sort reorders the visible measurement list

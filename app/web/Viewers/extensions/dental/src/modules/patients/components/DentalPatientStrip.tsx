@@ -8,7 +8,7 @@ function DentalPatientStrip() {
   if (!patientInfo.PatientName && !patientInfo.PatientID) {
     return (
       <div
-        className="flex min-w-0 shrink-0 items-center gap-3"
+        className="flex min-w-0 flex-1 items-center gap-3"
         data-cy="dental-patient-info"
       >
         <Icons.Patient className="text-primary/70 h-5 w-5 shrink-0" />
@@ -25,11 +25,11 @@ function DentalPatientStrip() {
   if (isMixedPatients) {
     return (
       <div
-        className="flex shrink-0 items-center gap-3"
+        className="flex min-w-0 flex-1 items-center gap-3"
         data-cy="dental-patient-info"
       >
         <Icons.MultiplePatients className="text-primary/70 h-5 w-5 shrink-0" />
-        <div className="leading-tight">
+        <div className="min-w-0 leading-tight">
           <p className="text-muted-foreground text-[10px] font-medium tracking-[0.14em] uppercase">
             Patient
           </p>
@@ -49,7 +49,7 @@ function DentalPatientStrip() {
 
   return (
     <div
-      className="flex min-w-0 max-w-md shrink-0 items-center gap-3"
+      className="flex min-w-0 flex-1 items-center gap-3"
       data-cy="dental-patient-info"
     >
       <Icons.Patient className="text-primary/70 h-5 w-5 shrink-0" />

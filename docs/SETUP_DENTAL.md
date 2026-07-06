@@ -130,7 +130,7 @@ cd app/web/Viewers
 pnpm run dev   # uses default config unless APP_CONFIG is set
 ```
 
-Use `dev:dental` to always load the dental config. Open the port printed in the terminal (often http://localhost:3000).
+Use `dev:dental` to always load the dental config. The viewer dev server runs on **http://localhost:3001** (`OHIF_PORT=3001`) so it does not conflict with the NestJS API on port 3000. Open the URL printed in the terminal.
 
 ## Production build
 
@@ -154,6 +154,7 @@ Primary config file:
 | `dentalApiUrl` | NestJS API base URL (enables auth + sync) | `http://localhost:3000/api/v1` |
 | `customizationService` | Loads dental auth routes, hotkeys, and theme | See config file |
 | `defaultDataSourceName` | DICOMweb source for study list | `ohif` (AWS S3 static WADO) |
+| `defaultWorkflowModeId` | Pre-selects launch workflow in the study list preview | `@ohif/mode-dental` |
 | `modesConfiguration` | Hides non-dental modes; shows `@ohif/mode-dental` | See config file |
 
 ### Plugin registration
@@ -173,7 +174,38 @@ Both packages must appear in `platform/app/pluginConfig.json`:
 - `@ohif/extension-dental.customizationModule.dentalAuth` — `/login` route, logout menu item
 - `@ohif/extension-default.customizationModule.theme` — theme system (`dental` preset in ui-next)
 
-### Data sources
+### `modesConfiguration` and dental mode visibility
+
+`dental.js` uses OHIF’s immutability-helper syntax to show dental mode and hide others:
+
+```js
+modesConfiguration: {
+  '@ohif/mode-dental': {
+    hide: { $set: false },
+    isValidMode: {
+      $set: () => ({ valid: true, description: 'Dental mode available for all studies' }),
+    },
+  },
+  '@ohif/mode-longitudinal': { hide: { $set: true } },
+  '@ohif/mode-basic': { hide: { $set: true } },
+},
+```
+
+These patches must be applied with `update(modeInstance, modeConfiguration)` inside `modes/dental/src/index.ts` — **not** spread onto the mode object (`...modeConfiguration`). Spreading leaves `hide` as the object `{ $set: false }`, which is truthy, so OHIF treats dental mode as hidden and it never appears in the study list.
+
+### Theme and appearance
+
+| Piece | Location | Notes |
+|-------|----------|-------|
+| Dental preset tokens | `platform/ui-next/src/themes/dental.json`, `themes.css` | Dark clinical teal palette (suited to imaging chrome) |
+| Theme provider registration | `extensions/dental/src/index.ts` | Registers `ActiveThemeProvider` whenever the dental extension loads |
+| Provider tree order | `platform/app/src/App.tsx` | `ActiveThemeProvider` must wrap `ModalProvider` so **Appearance** can call `useActiveTheme()` |
+| In-viewer toggle | Practice header → **Dental / Standard** | Persists to `localStorage` key `ohif:theme` |
+| Appearance menu | Header gear → **Appearance** | Lists all presets including **Tonal: Dental Clinical** |
+
+The dental extension’s UI (`ThemeToggle`, `DentalThemeBridge`, viewer state restore) always uses `useActiveTheme()`. The theme customization module in `customizationService` enables the Appearance menu; the provider must be mounted for either path to work.
+
+**`APP_CONFIG`:** Local `pnpm run dev` uses `config/dental.js` by default. Without it, the viewer falls back to `config/default.js`, which does not enable the theme module or dental-specific settings.
 
 The default config includes:
 
@@ -215,12 +247,17 @@ Token path in response: `data.token`.
 ## Using Dental Mode
 
 1. Sign in at `/login`.
-2. Open the study list and select a study (or use a URL with `StudyInstanceUIDs`).
-3. Dental Mode opens with the custom layout and 2×2 hanging protocol.
-4. Use the **Dental / Standard** theme toggle in the practice header.
-5. Select a tooth and numbering system (FDI / Universal).
-6. Click **Measurements** → choose a preset → draw on the viewport.
-7. Review measurements in the right panel; filter, sort, **Export JSON**, or save to the server.
+2. Open the study list.
+3. **Select a study** in the table (single click).
+4. In the right **preview panel**, under **Launch workflow**, click **Dental Mode** (or double-click the study row if dental is your default workflow).
+5. Optionally set a persistent default: preview panel **gear** → **Default Workflow** → `@ohif/mode-dental` / **Dental Mode**. Config key `defaultWorkflowModeId` pre-selects this when nothing is stored in `localStorage` (`studyList.defaultWorkflow`).
+6. Dental Mode opens with the custom layout and 2×2 hanging protocol.
+7. Use the **Dental / Standard** theme toggle in the practice header.
+8. Select a tooth and numbering system (FDI / Universal).
+9. Click **Measurements** → choose a preset → draw on the viewport.
+10. Review measurements in the right panel; filter, sort, **Export JSON**, or save to the server.
+
+> **Note:** The launch buttons only appear after a study is selected. If you see no workflows, see [Dental Mode not listed](#dental-mode-not-listed-in-study-list) below.
 
 ### Hanging protocol (`@ohif/hpDental2x2`)
 
@@ -260,6 +297,7 @@ extensions/dental/src/
 | Dental mode | `modes/dental/src/index.ts` |
 | Login page | `extensions/dental/src/modules/auth/components/DentalLoginPage.tsx` |
 | Dental theme | `platform/ui-next/src/themes/dental.json` |
+| Theme provider / App wiring | `extensions/dental/src/index.ts`, `platform/app/src/App.tsx` |
 | Toolbar / tools | `modes/dental/src/toolbarButtons.ts`, `initToolGroups.ts` |
 
 ## Verification checklist
@@ -267,7 +305,9 @@ extensions/dental/src/
 - [ ] `docker compose up` — viewer at :8080, API at :3000
 - [ ] `/login` gate — unauthenticated users cannot access study list
 - [ ] Practice header shows practice name, patient info, tooth selector
+- [ ] Study list preview shows **Dental Mode** launch button after selecting a study
 - [ ] Theme toggle switches dental teal palette
+- [ ] Appearance menu opens without runtime errors
 - [ ] 2×2 grid loads (bottom bitewing slots may be empty without bitewing DICOM)
 - [ ] Measurements palette activates Length/Angle tools with dental labels
 - [ ] Panel sort reorders the visible measurement list
@@ -277,15 +317,57 @@ extensions/dental/src/
 
 ## Troubleshooting
 
+### `WebSocket connection to 'ws://localhost:3000/ws' failed`
+
+This is the **rspack dev-server hot-reload** socket, not the dental API or DICOMweb.
+
+**Cause:** Port 3000 is used by the NestJS API (`app/api`). If the OHIF dev server also binds to 3000, or you open the viewer at the wrong port, the HMR client tries `ws://localhost:3000/ws` against the API (which has no `/ws` endpoint).
+
+**Fix:**
+
+1. Run the API on **http://localhost:3000** and the viewer with `pnpm run dev:dental` on **http://localhost:3001** (default `OHIF_PORT=3001` in `dev` / `dev:dental` scripts).
+2. Restart the viewer dev server after pulling this change.
+3. Open **http://localhost:3001**, not :3000.
+
+The warning is harmless if you are not actively using hot reload, but fixing the port split removes console noise.
+
+### `Error: request failed` (dicomweb-client)
+
+Often a failed DICOMweb thumbnail or image request surfacing as an uncaught rejection. `dental.js` uses `thumbnailRendering: 'wadors'` for the CloudFront static WADO source (same as other OHIF configs for that server). Hard-refresh after config changes.
+
+### `useActiveTheme must be used within an ActiveThemeProvider`
+
+This error appears when dental UI or the **Appearance** dialog calls `useActiveTheme()` but the provider is missing or mounted in the wrong place.
+
+**Causes and fixes:**
+
+1. **Config** — `customizationService` in `dental.js` must include `@ohif/extension-default.customizationModule.theme`, and you must run with `APP_CONFIG=config/dental.js`.
+2. **Provider registration** — `@ohif/extension-dental` registers `ActiveThemeProvider` in `preRegistration` (dental components depend on it).
+3. **Provider order** — In `platform/app/src/App.tsx`, `ActiveThemeProvider` must sit **above** `ModalProvider` and `DialogProvider`. Modals render as children of `ModalProvider`; if the theme provider is nested below routes only, **Appearance** crashes on open.
+4. **Stale build** — Restart the dev server after changing extension or `App.tsx` provider wiring.
+
+### Appearance menu crashes on open
+
+Same root cause as above: modal content is outside the theme context unless `ActiveThemeProvider` wraps `ModalProvider`. Apply fix (3) and hard-refresh.
+
+### Dental theme looks wrong or unchanged
+
+- The dental preset is a **dark** clinical teal palette (aligned with other OHIF tonal themes), not a light mint UI.
+- A previous theme may be cached: `localStorage.removeItem('ohif:theme')` in devtools, or toggle **Dental / Standard** in the practice header.
+- Hard-refresh after editing `platform/ui-next/src/themes/dental.json` or `themes.css`.
+
+### Dental Mode not listed in study list
+
+1. Confirm `@ohif/mode-dental` is in `pluginConfig.json`.
+2. Confirm `APP_CONFIG=config/dental.js` (check `http://localhost:8080/app-config.js` or your dev port).
+3. Confirm `modes/dental/src/index.ts` applies `modesConfiguration` with `immutability-helper` `update()` — not `...modeConfiguration` (see [modesConfiguration](#modesconfiguration-and-dental-mode-visibility)).
+4. Run `pnpm install` in `app/web/Viewers` and restart the dev server so plugin imports regenerate.
+5. Select a study in the table — workflow buttons render in the preview panel only when a row is selected.
+6. Open preview panel **settings (gear)** → **Default Workflow** and choose **Dental Mode**, or rely on `defaultWorkflowModeId` in `dental.js`.
+
 ### Study list fails after login (CORS / network error)
 
 The dental JWT must not be attached to DICOMweb requests. If you see failures against `cloudfront.net`, confirm `authApi.ts` returns an empty `getAuthorizationHeader` for DICOMweb and that auth bootstrap ran (check `dentalApiUrl` is set in config).
-
-### Dental mode not listed
-
-1. Confirm `@ohif/mode-dental` is in `pluginConfig.json`.
-2. Run `pnpm install` in `app/web/Viewers`.
-3. Restart dev server so plugin imports regenerate.
 
 ### Auth redirect loop
 

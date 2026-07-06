@@ -32,6 +32,8 @@ export type LayoutProps = {
   loadedModes?: Mode[];
   /** Optional data path prefix for routes (e.g., '/dicomweb') */
   dataPath?: string;
+  /** App-config default workflow when localStorage has no selection */
+  defaultWorkflowModeId?: string;
   /** Function to preserve query parameters when launching workflows */
   preserveQueryParameters: (query: URLSearchParams) => void;
 };
@@ -45,6 +47,7 @@ function LayoutRoot({
   loadedModes = [],
   preserveQueryParameters,
   dataPath,
+  defaultWorkflowModeId,
   children,
 }: LayoutProps) {
   let tableChild: React.ReactNode = null;
@@ -96,6 +99,7 @@ function LayoutRoot({
       loadedModes={loadedModes}
       preserveQueryParameters={preserveQueryParameters}
       dataPath={dataPath}
+      defaultWorkflowModeId={defaultWorkflowModeId}
     >
       <LayoutContext.Provider value={value}>
         <ResizablePanelGroup
