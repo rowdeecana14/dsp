@@ -47,11 +47,16 @@ function patchStudyPanelState(
   studyInstanceUID: string,
   patch: Partial<MeasurementPanelUiState>
 ): Record<string, MeasurementPanelUiState> {
+  const current = panelStateByStudy[studyInstanceUID] ?? createDefaultPanelUiState();
+
   return {
     ...panelStateByStudy,
     [studyInstanceUID]: {
-      ...getPanelUiState(panelStateByStudy, studyInstanceUID),
+      ...current,
       ...patch,
+      selectedUids: patch.selectedUids
+        ? new Set(patch.selectedUids)
+        : new Set(current.selectedUids),
     },
   };
 }
@@ -90,6 +95,7 @@ interface MeasurementStoreState extends MeasurementPersistenceState {
   setPage: (studyInstanceUID: string, page: number) => void;
   setPageSize: (studyInstanceUID: string, pageSize: number) => void;
   setSelectedUids: (studyInstanceUID: string, selectedUids: Set<string>) => void;
+  toggleSelectedUid: (studyInstanceUID: string, uid: string, checked: boolean) => void;
   setFiltersExpanded: (studyInstanceUID: string, filtersExpanded: boolean) => void;
   reset: () => void;
 }
@@ -150,6 +156,22 @@ export const useMeasurementStore = create<MeasurementStoreState>(set => ({
         selectedUids,
       }),
     })),
+
+  toggleSelectedUid: (studyInstanceUID, uid, checked) =>
+    set(state => {
+      const current = state.panelStateByStudy[studyInstanceUID] ?? createDefaultPanelUiState();
+      const selectedUids = new Set(current.selectedUids);
+      if (checked) {
+        selectedUids.add(uid);
+      } else {
+        selectedUids.delete(uid);
+      }
+      return {
+        panelStateByStudy: patchStudyPanelState(state.panelStateByStudy, studyInstanceUID, {
+          selectedUids,
+        }),
+      };
+    }),
 
   setFiltersExpanded: (studyInstanceUID, filtersExpanded) =>
     set(state => ({

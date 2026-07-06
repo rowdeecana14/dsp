@@ -4,6 +4,10 @@ import { Repository } from 'typeorm';
 import { PaginationService, PaginatedResult } from '../../../shared/pagination/pagination.service';
 import { MeasurementEntity } from '../entities/measurement.entity';
 import { MEASUREMENTS_ALLOWED_SORT_FIELDS, MeasurementsPaginationDto } from '../dto/measurements-pagination.dto';
+import {
+  applyMeasurementSeriesFilter,
+  resolveMeasurementSeriesFilterIds,
+} from '../utils/measurements-query.utils';
 
 @Injectable()
 export class MeasurementsPaginationService extends PaginationService<MeasurementEntity> {
@@ -48,13 +52,8 @@ export class MeasurementsPaginationService extends PaginationService<Measurement
           });
         }
 
-        const seriesIds = query.series_ids
-          ?.split(',')
-          .map(id => id.trim())
-          .filter(Boolean);
-        if (seriesIds?.length) {
-          qb.andWhere('measurement.series_id IN (:...seriesIds)', { seriesIds });
-        }
+        const uniqueSeriesIds = resolveMeasurementSeriesFilterIds(query);
+        applyMeasurementSeriesFilter(qb, this.alias, uniqueSeriesIds);
 
         return qb;
       },

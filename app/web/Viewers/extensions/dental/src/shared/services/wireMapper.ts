@@ -126,6 +126,7 @@ const QUERY_KEY_ALIASES: Record<string, string> = {
   sortOrder: 'sort_order',
   dentalPresetId: 'dental_preset_id',
   seriesIds: 'series_ids',
+  seriesId: 'series_id',
 };
 
 function resolveWireKey(
@@ -401,6 +402,7 @@ export function toApiMeasurementsQueryParams(
       'search',
       'dental_preset_id',
       'series_ids',
+      'series_id',
     ],
     QUERY_KEY_ALIASES,
   );
@@ -430,6 +432,11 @@ export function toApiMeasurementsQueryParams(
   const seriesIds = normalized.series_ids;
   if (typeof seriesIds === 'string' && seriesIds.trim()) {
     params.set('series_ids', seriesIds.trim());
+  } else {
+    const seriesId = normalized.series_id;
+    if (typeof seriesId === 'string' && seriesId.trim()) {
+      params.set('series_id', seriesId.trim());
+    }
   }
 
   return params;

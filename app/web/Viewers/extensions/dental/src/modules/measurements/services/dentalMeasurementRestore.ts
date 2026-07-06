@@ -319,10 +319,16 @@ export function serverMeasurementToDisplayItem(
   index = 0
 ): Record<string, unknown> {
   const coordinates = normalizeRestoreCoordinates(saved.coordinates ?? {});
-  const displaySets = displaySetService.getActiveDisplaySets();
-  const displaySetInstanceUID =
-    (coordinates.displaySetInstanceUID as string | undefined) ??
-    displaySets[0]?.displaySetInstanceUID;
+  const seriesId = resolveSavedMeasurementSeriesId(saved);
+  let displaySetInstanceUID = coordinates.displaySetInstanceUID as string | undefined;
+  if (!displaySetInstanceUID && seriesId) {
+    const seriesDisplaySets = displaySetService.getDisplaySetsForSeries(seriesId);
+    displaySetInstanceUID = seriesDisplaySets[0]?.displaySetInstanceUID;
+  }
+  if (!displaySetInstanceUID) {
+    const displaySets = displaySetService.getActiveDisplaySets();
+    displaySetInstanceUID = displaySets[0]?.displaySetInstanceUID;
+  }
 
   const uid =
     saved.id && UUID_PATTERN.test(saved.id)

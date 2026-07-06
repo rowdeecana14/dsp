@@ -10,7 +10,7 @@ export const dentalPanelSectionClassName =
   'border-border/60 bg-muted/10 rounded-lg border';
 
 export const dentalPanelCheckboxClassName =
-  'border-border/80 data-[state=checked]:bg-primary data-[state=checked]:border-primary h-4 w-4 rounded-sm';
+  'border-neutral bg-background hover:border-neutral-light data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=checked]:text-primary-foreground h-4 w-4 min-h-4 min-w-4 shrink-0 rounded-sm shadow-sm';
 
 /** Readable body text on dark dental surfaces — avoids broken opacity modifiers on theme tokens. */
 export const dentalPanelBodyTextClassName = 'text-neutral-light';

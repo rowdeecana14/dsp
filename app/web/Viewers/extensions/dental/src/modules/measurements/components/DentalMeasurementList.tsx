@@ -1,5 +1,4 @@
 import React from 'react';
-import { useSystem } from '@ohif/core';
 import { useMeasurementActions } from '../hooks/useMeasurementActions';
 import DentalMeasurementRow from './DentalMeasurementRow';
 
@@ -7,14 +6,18 @@ type DentalMeasurementListProps = {
   items: Record<string, unknown>[];
   pageOffset?: number;
   selectedUids: Set<string>;
+  activeUid?: string | null;
   onToggleSelect: (uid: string, checked: boolean, item?: Record<string, unknown>) => void;
+  onJump: (uid: string) => void;
 };
 
 function DentalMeasurementList({
   items,
   pageOffset = 0,
   selectedUids,
+  activeUid = null,
   onToggleSelect,
+  onJump,
 }: DentalMeasurementListProps) {
   const { runAction } = useMeasurementActions(items);
 
@@ -32,8 +35,9 @@ function DentalMeasurementList({
             item={item}
             index={pageOffset + index}
             isChecked={selectedUids.has(uid)}
+            isActive={activeUid === uid}
             onToggleSelect={checked => onToggleSelect(uid, checked, item)}
-            onJump={() => runAction('jumpToMeasurement', uid)}
+            onJump={() => onJump(uid)}
             onRename={() => runAction('renameMeasurement', uid)}
             onDelete={() => runAction('removeMeasurement', uid)}
           />

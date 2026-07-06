@@ -253,7 +253,9 @@ function DentalMeasurementsPanel() {
                     items={panel.displayMeasurements}
                     pageOffset={panel.pageOffset}
                     selectedUids={panel.selectedUids}
+                    activeUid={panel.activeMeasurementUid}
                     onToggleSelect={panel.handleToggleSelect}
+                    onJump={panel.handleJumpToMeasurement}
                   />
                 </div>
               </div>

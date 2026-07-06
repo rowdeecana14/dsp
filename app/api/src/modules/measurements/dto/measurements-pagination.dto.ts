@@ -39,6 +39,14 @@ export class MeasurementsPaginationDto extends PaginationDto {
   @IsString()
   series_ids?: string;
 
+  @ApiPropertyOptional({
+    name: 'series_id',
+    description: 'Single series instance UID (alias for series_ids)',
+  })
+  @IsOptional()
+  @IsString()
+  series_id?: string;
+
   @ValidateSortBy(MEASUREMENTS_ALLOWED_SORT_FIELDS)
   declare sort_by?: typeof MEASUREMENTS_ALLOWED_SORT_FIELDS[number];
 }

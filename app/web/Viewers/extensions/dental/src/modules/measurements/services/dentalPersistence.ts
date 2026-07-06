@@ -98,6 +98,14 @@ function findServerMeasurementIndex(uid: string): number {
   });
 }
 
+export function getServerMeasurementByUid(uid: string): DentalMeasurementExport | null {
+  const index = findServerMeasurementIndex(uid);
+  if (index < 0) {
+    return null;
+  }
+  return useMeasurementStore.getState().serverMeasurements[index] ?? null;
+}
+
 export function updateServerMeasurement(
   uid: string,
   updater: (saved: DentalMeasurementExport) => DentalMeasurementExport

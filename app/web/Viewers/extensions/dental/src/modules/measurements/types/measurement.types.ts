@@ -90,6 +90,10 @@ export type MeasurementsListQuery = {
   sort_order?: 'ASC' | 'DESC';
   search?: string;
   dental_preset_id?: string;
+  /** Comma-separated series instance UIDs for the active viewport / selected series */
+  series_ids?: string;
+  /** Single series instance UID (alias for one entry in series_ids) */
+  series_id?: string;
   fetchOptions?: DentalFetchOptions;
 };
 

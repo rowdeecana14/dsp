@@ -8,8 +8,10 @@ import {
   removeServerMeasurement,
   updateServerMeasurement,
   getDentalPersistenceState,
+  getServerMeasurementByUid,
   markDentalMeasurementsSynced,
 } from './dentalPersistence';
+import { restoreDentalMeasurements } from './dentalMeasurementRestore';
 import {
   bulkUpdateMeasurementsOnServer,
   deleteMeasurementFromServer,
@@ -86,6 +88,80 @@ async function runLiveMeasurementCommand(
   }
 
   commandsManager.runCommand(command, options, CORNERSTONE_CONTEXT);
+}
+
+function activateViewportForMeasurementItem(
+  item: Record<string, unknown>,
+  commandsManager: AppTypes.CommandsManager,
+  servicesManager: AppTypes.ServicesManager
+): string | null {
+  const { viewportGridService, displaySetService } = servicesManager.services;
+  let displaySetInstanceUID = item.displaySetInstanceUID as string | undefined;
+
+  const referenceSeriesUID = item.referenceSeriesUID as string | undefined;
+  if (!displaySetInstanceUID && referenceSeriesUID) {
+    const seriesDisplaySets = displaySetService.getDisplaySetsForSeries(referenceSeriesUID);
+    displaySetInstanceUID = seriesDisplaySets[0]?.displaySetInstanceUID;
+  }
+
+  if (displaySetInstanceUID) {
+    const { viewports, activeViewportId } = viewportGridService.getState();
+    for (const [viewportId, viewport] of viewports) {
+      if ((viewport.displaySetInstanceUIDs ?? []).includes(displaySetInstanceUID)) {
+        if (activeViewportId !== viewportId) {
+          commandsManager.runCommand(
+            'setViewportActive',
+            { viewportId },
+            CORNERSTONE_CONTEXT
+          );
+        }
+        return viewportId;
+      }
+    }
+  }
+
+  const resolved = resolveDentalImageViewport(servicesManager);
+  if (resolved?.viewportId) {
+    commandsManager.runCommand(
+      'setViewportActive',
+      { viewportId: resolved.viewportId },
+      CORNERSTONE_CONTEXT
+    );
+    return resolved.viewportId;
+  }
+
+  return viewportGridService.getActiveViewportId() ?? null;
+}
+
+async function jumpToDentalMeasurement(
+  commandsManager: AppTypes.CommandsManager,
+  servicesManager: AppTypes.ServicesManager,
+  uid: string,
+  displayMeasurements: Record<string, unknown>[]
+): Promise<void> {
+  const { measurementService } = servicesManager.services;
+  const listItem = displayMeasurements.find(entry => entry.uid === uid);
+
+  if (!measurementService.getMeasurement(uid)) {
+    const saved = getServerMeasurementByUid(uid);
+    if (saved) {
+      restoreDentalMeasurements(servicesManager, [saved]);
+    }
+  }
+
+  const liveMeasurement = measurementService.getMeasurement(uid);
+  const jumpItem = (liveMeasurement ?? listItem) as Record<string, unknown> | undefined;
+  if (!jumpItem) {
+    return;
+  }
+
+  activateViewportForMeasurementItem(jumpItem, commandsManager, servicesManager);
+
+  await runLiveMeasurementCommand(commandsManager, 'jumpToMeasurement', {
+    uid,
+    annotationUID: uid,
+    displayMeasurements,
+  });
 }
 
 async function persistAfterServerChange(
@@ -327,6 +403,11 @@ export async function handleDentalMeasurementAction(
     displayMeasurements,
   };
 
+  if (command === 'jumpToMeasurement') {
+    await jumpToDentalMeasurement(commandsManager, servicesManager, uid, displayMeasurements);
+    return;
+  }
+
   const liveMeasurement = measurementService.getMeasurement(uid);
   if (liveMeasurement) {
     if (command === 'removeMeasurement') {
@@ -377,25 +458,6 @@ export async function handleDentalMeasurementAction(
   if (command === 'toggleVisibilityMeasurement') {
     await toggleServerMeasurementVisibility(servicesManager, uid, item);
     return;
-  }
-
-  if (command === 'jumpToMeasurement') {
-    const displaySetInstanceUID = item.displaySetInstanceUID as string | undefined;
-    const { viewportGridService } = servicesManager.services;
-
-    if (displaySetInstanceUID) {
-      const { viewports } = viewportGridService.getState();
-      for (const [viewportId, viewport] of viewports) {
-        if ((viewport.displaySetInstanceUIDs ?? []).includes(displaySetInstanceUID)) {
-          commandsManager.runCommand(
-            'setViewportActive',
-            { viewportId },
-            CORNERSTONE_CONTEXT
-          );
-          break;
-        }
-      }
-    }
   }
 }
 

@@ -16,6 +16,7 @@ type DentalMeasurementRowProps = {
   item: Record<string, unknown>;
   index: number;
   isChecked: boolean;
+  isActive?: boolean;
   onToggleSelect: (checked: boolean) => void;
   onJump: () => void;
   onRename: () => void;
@@ -36,6 +37,7 @@ function DentalMeasurementRow({
   item,
   index,
   isChecked,
+  isActive = false,
   onToggleSelect,
   onJump,
   onRename,
@@ -48,9 +50,11 @@ function DentalMeasurementRow({
     <div
       className={classNames(
         'group flex min-h-[3.5rem] w-full items-stretch overflow-hidden rounded-md border transition-colors',
-        isChecked
-          ? 'border-primary/50 bg-accent'
-          : 'border-border/50 bg-card hover:border-border hover:bg-accent'
+        isActive
+          ? 'border-primary bg-primary/10 ring-1 ring-primary/30'
+          : isChecked
+            ? 'border-primary/50 bg-accent'
+            : 'border-border/50 bg-card hover:border-border hover:bg-accent'
       )}
       data-cy={`dental-measurement-row-${index}`}
     >
@@ -67,12 +71,13 @@ function DentalMeasurementRow({
         }}
       >
         <div
-          className="flex shrink-0 items-center"
+          className="flex shrink-0 items-center py-0.5 pr-0.5"
           onClick={event => event.stopPropagation()}
         >
           <Checkbox
             checked={isChecked}
             onCheckedChange={checked => onToggleSelect(checked === true)}
+            onClick={event => event.stopPropagation()}
             aria-label={`Select ${label}`}
             data-cy={`dental-measurement-select-${index}`}
             className={dentalPanelCheckboxClassName}

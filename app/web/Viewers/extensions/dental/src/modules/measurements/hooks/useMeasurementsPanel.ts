@@ -19,6 +19,8 @@ import {
 import {
   mapMeasurementToExport,
   hasUnsavedMeasurementChanges,
+  measurementMatchesActiveSeries,
+  resolveLiveMeasurementSeriesId,
 } from '../services/dentalApiMappers';
 import {
   liveMeasurementToDisplayItem,
@@ -30,7 +32,7 @@ import {
   DENTAL_MEASUREMENT_PRESETS,
   resolveDentalMeasurementLabel,
 } from '../../dental/store/dental.store';
-import { deleteDentalMeasurements, renameDentalMeasurementLabels } from '../services/dentalMeasurementActions';
+import { deleteDentalMeasurements, renameDentalMeasurementLabels, handleDentalMeasurementAction } from '../services/dentalMeasurementActions';
 import {
   showDentalErrorNotification,
   showDentalSuccessNotification,
@@ -113,11 +115,18 @@ function toApiSortField(field: SortField): string {
 
 function useMeasurementsPanel() {
   const { servicesManager, commandsManager } = useSystem();
-  const { studyInstanceUID } = useDentalViewportContext();
+  const { studyInstanceUID, focusedSeriesIds } = useDentalViewportContext();
+  const seriesIdsParam = useMemo(
+    () => (focusedSeriesIds.length ? focusedSeriesIds.join(',') : undefined),
+    [focusedSeriesIds]
+  );
   const { displaySetService } = servicesManager.services;
 
   const panelState = useMeasurementStore(state =>
     getPanelUiState(state.panelStateByStudy, studyInstanceUID)
+  );
+  const selectedUids = useMeasurementStore(
+    state => getPanelUiState(state.panelStateByStudy, studyInstanceUID).selectedUids
   );
   const {
     filterText,
@@ -126,7 +135,6 @@ function useMeasurementsPanel() {
     sortAsc,
     page,
     pageSize,
-    selectedUids,
     filtersExpanded,
   } = panelState;
   const presetFilter = rawPresetFilter as PresetFilter;
@@ -139,6 +147,7 @@ function useMeasurementsPanel() {
   const storeSetFiltersExpanded = useMeasurementStore(state => state.setFiltersExpanded);
   const storeSetSortAsc = useMeasurementStore(state => state.setSortAsc);
   const storeSetSelectedUids = useMeasurementStore(state => state.setSelectedUids);
+  const storeToggleSelectedUid = useMeasurementStore(state => state.toggleSelectedUid);
 
   const requireStudy = useCallback(() => studyInstanceUID || null, [studyInstanceUID]);
 
@@ -201,18 +210,6 @@ function useMeasurementsPanel() {
     [requireStudy, storeSetSortAsc]
   );
 
-  const setSelectedUids = useCallback(
-    (value: Set<string> | ((prev: Set<string>) => Set<string>)) => {
-      const uid = requireStudy();
-      if (!uid) return;
-      const current = getPanelUiState(useMeasurementStore.getState().panelStateByStudy, uid)
-        .selectedUids;
-      const next = typeof value === 'function' ? value(current) : value;
-      storeSetSelectedUids(uid, next);
-    },
-    [requireStudy, storeSetSelectedUids]
-  );
-
   const setFiltersExpandedWithUpdater = useCallback(
     (value: boolean | ((prev: boolean) => boolean)) => {
       const uid = requireStudy();
@@ -225,6 +222,7 @@ function useMeasurementsPanel() {
     [requireStudy, storeSetFiltersExpanded]
   );
 
+  const [activeMeasurementUid, setActiveMeasurementUid] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [selectedDetails, setSelectedDetails] = useState<Map<string, EditMeasurementItem>>(
     () => new Map()
@@ -245,10 +243,17 @@ function useMeasurementsPanel() {
   const showDelayedListLoading = useDelayedLoading(isLoadingList);
 
   useEffect(() => {
-    setDebouncedSearch(filterText.trim());
+    if (studyInstanceUID) {
+      storeSetSelectedUids(studyInstanceUID, new Set());
+    }
+    setActiveMeasurementUid(null);
     setSelectedDetails(new Map());
     setConfirmDeleteOpen(false);
     setEditDialogOpen(false);
+  }, [studyInstanceUID, storeSetSelectedUids]);
+
+  useEffect(() => {
+    setDebouncedSearch(filterText.trim());
   }, [studyInstanceUID]);
 
   useEffect(() => {
@@ -273,6 +278,7 @@ function useMeasurementsPanel() {
         sort_order: sortAsc ? 'ASC' : 'DESC',
         search: debouncedSearch || undefined,
         dental_preset_id: presetFilter === 'all' ? undefined : presetFilter,
+        series_ids: seriesIdsParam,
       });
 
       if (!result) {
@@ -303,6 +309,7 @@ function useMeasurementsPanel() {
     sortAsc,
     debouncedSearch,
     presetFilter,
+    seriesIdsParam,
     displaySetService,
   ]);
 
@@ -331,12 +338,15 @@ function useMeasurementsPanel() {
 
     return liveMeasurements
       .map(liveMeasurementToDisplayItem)
-      .filter(
-        measurement =>
+      .filter(measurement => {
+        const seriesId = resolveLiveMeasurementSeriesId(measurement);
+        return (
+          measurementMatchesActiveSeries(seriesId, focusedSeriesIds) &&
           matchesPresetFilter(measurement, presetFilter) &&
           matchesTextFilter(measurement, filterText)
-      );
-  }, [useApiList, liveMeasurements, presetFilter, filterText]);
+        );
+      });
+  }, [useApiList, liveMeasurements, presetFilter, filterText, focusedSeriesIds]);
 
   const offlineSortedMeasurements = useMemo(
     () => sortMeasurements(offlineMeasurements, sortField, sortAsc),
@@ -394,7 +404,16 @@ function useMeasurementsPanel() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, presetFilter, sortField, sortAsc, pageSize, studyInstanceUID, useApiList]);
+  }, [
+    debouncedSearch,
+    presetFilter,
+    sortField,
+    sortAsc,
+    pageSize,
+    studyInstanceUID,
+    seriesIdsParam,
+    useApiList,
+  ]);
 
   useEffect(() => {
     if (!useApiList && page > offlineTotalPages) {
@@ -441,17 +460,28 @@ function useMeasurementsPanel() {
     [selectedUids, selectedDetails]
   );
 
+  const handleJumpToMeasurement = useCallback(
+    (uid: string) => {
+      setActiveMeasurementUid(uid);
+      void handleDentalMeasurementAction(
+        commandsManager,
+        servicesManager,
+        'jumpToMeasurement',
+        uid,
+        displayMeasurements
+      );
+    },
+    [commandsManager, servicesManager, displayMeasurements]
+  );
+
   const handleToggleSelect = useCallback(
     (uid: string, checked: boolean, item?: Record<string, unknown>) => {
-      setSelectedUids(prev => {
-        const next = new Set(prev);
-        if (checked) {
-          next.add(uid);
-        } else {
-          next.delete(uid);
-        }
-        return next;
-      });
+      const studyUid = requireStudy();
+      if (!studyUid) {
+        return;
+      }
+
+      storeToggleSelectedUid(studyUid, uid, checked);
 
       if (checked && item) {
         rememberSelectedItem(item);
@@ -459,42 +489,50 @@ function useMeasurementsPanel() {
         forgetSelectedItem(uid);
       }
     },
-    [rememberSelectedItem, forgetSelectedItem]
+    [requireStudy, storeToggleSelectedUid, rememberSelectedItem, forgetSelectedItem]
   );
 
   const handleToggleSelectAll = useCallback(() => {
+    const studyUid = requireStudy();
+    if (!studyUid) {
+      return;
+    }
+
     if (allPageSelected) {
-      setSelectedUids(prev => {
-        const next = new Set(prev);
-        pageUids.forEach(uid => next.delete(uid));
-        return next;
-      });
+      const next = new Set(selectedUids);
+      pageUids.forEach(uid => next.delete(uid));
+      storeSetSelectedUids(studyUid, next);
       setSelectedDetails(prev => {
-        const next = new Map(prev);
-        pageUids.forEach(uid => next.delete(uid));
-        return next;
+        const nextDetails = new Map(prev);
+        pageUids.forEach(uid => nextDetails.delete(uid));
+        return nextDetails;
       });
       return;
     }
 
-    setSelectedUids(prev => {
-      const next = new Set(prev);
-      displayMeasurements.forEach(item => next.add(String(item.uid)));
-      return next;
-    });
+    const next = new Set(selectedUids);
+    displayMeasurements.forEach(item => next.add(String(item.uid)));
+    storeSetSelectedUids(studyUid, next);
     setSelectedDetails(prev => {
-      const next = new Map(prev);
+      const nextDetails = new Map(prev);
       displayMeasurements.forEach(item => {
         const uid = String(item.uid);
-        next.set(uid, {
+        nextDetails.set(uid, {
           uid,
           label: resolveDentalMeasurementLabel(item),
           value: extractValue(item),
         });
       });
-      return next;
+      return nextDetails;
     });
-  }, [allPageSelected, pageUids, displayMeasurements]);
+  }, [
+    requireStudy,
+    allPageSelected,
+    pageUids,
+    displayMeasurements,
+    selectedUids,
+    storeSetSelectedUids,
+  ]);
 
   const handleSaveEdits = async (updates: Array<{ uid: string; label: string }>) => {
     const changedUpdates = updates.filter(({ uid, label }) => {
@@ -558,7 +596,9 @@ function useMeasurementsPanel() {
         uidsToDelete,
         displayMeasurements
       );
-      setSelectedUids(new Set());
+      if (studyInstanceUID) {
+        storeSetSelectedUids(studyInstanceUID, new Set());
+      }
       setSelectedDetails(new Map());
       if (useApiList) {
         await loadMeasurementsPage();
@@ -600,6 +640,7 @@ function useMeasurementsPanel() {
           sort_order: sortAsc ? 'ASC' : 'DESC',
           search: debouncedSearch || undefined,
           dental_preset_id: presetFilter === 'all' ? undefined : presetFilter,
+          series_ids: seriesIdsParam,
         });
 
         if (!result?.measurements?.length) {
@@ -756,6 +797,8 @@ function useMeasurementsPanel() {
     filtersExpanded,
     setFiltersExpanded: setFiltersExpandedWithUpdater,
     displayMeasurements,
+    activeMeasurementUid,
+    handleJumpToMeasurement,
     paginationMeta,
     pageOffset,
     selectAllState,
