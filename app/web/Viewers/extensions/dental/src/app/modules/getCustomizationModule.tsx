@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import { DentalLoginPage, authService } from '../../modules/auth';
+import DentalWorkListHeader from '../../modules/dental/components/DentalWorkListHeader';
+import { dentalBrandingApi } from '../../modules/dental/store/dentalBranding.store';
 
 type SettingsMenuItem = {
   id: string;
@@ -43,6 +45,8 @@ export default function getCustomizationModule() {
             },
           ],
         },
+        'workList.brandingApi': dentalBrandingApi,
+        'workList.headerComponent': DentalWorkListHeader,
       },
     },
     {

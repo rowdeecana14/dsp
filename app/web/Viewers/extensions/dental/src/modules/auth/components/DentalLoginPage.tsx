@@ -1,31 +1,24 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Button, Input, Label } from '@ohif/ui-next';
 import { zod4Resolver } from '../../../shared/utils/zod4Resolver';
+import { useDentalBranding } from '../../dental/hooks/useDentalBranding';
+import { initializeDentalBranding } from '../../../shared/utils/dentalBranding';
 import { useAuth } from '../hooks/useAuth';
 import { refreshDentalAuthHeaders } from '../services/authApi';
 import { loginSchema, type LoginFormValues } from '../schemas/login.schema';
 
-type DentalAppConfig = AppTypes.Config & { dentalPracticeName?: string };
-
-const DENTAL_LOGO_PATH = 'assets/dental-logo.png';
+type DentalAppConfig = AppTypes.Config & { dentalPracticeName?: string; dentalPracticeLogo?: string };
 
 function DentalLoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, authApi, login, userAuthenticationService } = useAuth();
 
-  const practiceName =
-    (typeof window !== 'undefined' && (window.config as DentalAppConfig)?.dentalPracticeName) ||
-    'Dental Practice';
-
-  const logoSrc = useMemo(() => {
-    const publicUrl =
-      typeof window !== 'undefined' && window.PUBLIC_URL ? window.PUBLIC_URL : '/';
-    const base = publicUrl.endsWith('/') ? publicUrl : `${publicUrl}/`;
-    return `${base}${DENTAL_LOGO_PATH}`;
-  }, []);
+  const appConfig =
+    typeof window !== 'undefined' ? (window.config as DentalAppConfig | undefined) : undefined;
+  const { practiceName, logoUrl: logoSrc } = useDentalBranding();
 
   const {
     register,
@@ -36,6 +29,13 @@ function DentalLoginPage() {
     resolver: zod4Resolver(loginSchema),
     defaultValues: { email: '', password: '' },
   });
+
+  const practiceNameFromConfig = appConfig?.dentalPracticeName;
+  const logoPathFromConfig = appConfig?.dentalPracticeLogo;
+
+  useEffect(() => {
+    initializeDentalBranding(appConfig);
+  }, [practiceNameFromConfig, logoPathFromConfig]);
 
   useEffect(() => {
     if (user) {

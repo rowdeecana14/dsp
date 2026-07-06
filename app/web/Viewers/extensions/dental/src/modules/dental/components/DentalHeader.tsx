@@ -10,12 +10,13 @@ import {
   ToolButton,
 } from '@ohif/ui-next';
 import { IconPresentationProvider } from '@ohif/ui-next';
-import DentalToothIcon from './DentalToothIcon';
 
 interface DentalHeaderProps {
   children?: ReactNode;
   practiceName: string;
+  logoUrl: string;
   practiceBar: ReactNode;
+  headerCenter?: ReactNode;
   headerActions?: ReactNode;
   menuOptions: Array<{
     title: string;
@@ -31,7 +32,9 @@ interface DentalHeaderProps {
 function DentalHeader({
   children,
   practiceName,
+  logoUrl,
   practiceBar,
+  headerCenter,
   headerActions,
   menuOptions,
   isReturnEnabled = true,
@@ -60,7 +63,12 @@ function DentalHeader({
         data-cy="practice-header"
         {...props}
       >
-        <div className="bg-background/95 flex h-14 w-full items-stretch backdrop-blur-sm">
+        <div className="bg-background/95 relative flex h-14 w-full items-stretch backdrop-blur-sm">
+          {headerCenter ? (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4">
+              {headerCenter}
+            </div>
+          ) : null}
           <div
             className={classNames(
               'border-border/60 flex shrink-0 items-center gap-2 border-r pl-2.5 pr-4',
@@ -72,9 +80,14 @@ function DentalHeader({
             {isReturnEnabled && (
               <Icons.ArrowLeft className="text-muted-foreground hover:text-primary h-5 w-5 shrink-0 transition-colors" />
             )}
-            <DentalToothIcon className="text-primary h-6 w-6 shrink-0" />
+            <img
+              src={logoUrl}
+              alt=""
+              className="h-7 w-7 shrink-0 object-contain"
+              data-cy="practice-logo"
+            />
             <p
-              className="text-foreground max-w-[200px] truncate text-sm font-semibold leading-tight tracking-wide sm:max-w-[240px]"
+              className="text-foreground max-w-[200px] truncate text-sm font-semibold leading-tight tracking-tight sm:max-w-[260px]"
               data-cy="practice-name"
               title={practiceName}
             >

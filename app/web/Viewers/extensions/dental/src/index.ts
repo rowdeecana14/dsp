@@ -3,6 +3,7 @@ import { ActiveThemeProvider } from '@ohif/ui-next';
 
 import { id } from './id';
 import DentalAuthBootstrapProvider from './app/providers/DentalAuthBootstrapProvider';
+import { initializeDentalBranding } from './shared/utils/dentalBranding';
 import getHangingProtocolModule from './app/modules/getHangingProtocolModule';
 import getCustomizationModule from './app/modules/getCustomizationModule';
 import getPanelModule from './app/modules/getPanelModule';
@@ -17,6 +18,8 @@ const dentalExtension: Types.Extensions.Extension = {
   id,
 
   preRegistration: ({ servicesManager, serviceProvidersManager, appConfig }: Types.Extensions.ExtensionParams) => {
+    initializeDentalBranding(appConfig as { dentalPracticeName?: string; dentalPracticeLogo?: string });
+
     const { hangingProtocolService, measurementService } = servicesManager.services;
     measurementService.addMeasurementSchemaKeys('dentalPresetId');
 

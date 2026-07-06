@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 
-import { Button, Icons, useModal, useUserAuthentication } from '@ohif/ui-next';
+import { Button, Icons } from '@ohif/ui-next';
 import { useSystem } from '@ohif/core';
 import { Toolbar } from '@ohif/extension-default';
 import { preserveQueryParameters } from '@ohif/app';
@@ -12,28 +11,34 @@ import DentalPatientStrip from '../../patients/components/DentalPatientStrip';
 import { HeaderDivider } from '../../../shared';
 import ThemeToggle from './ThemeToggle';
 import ToothSelector from './ToothSelector';
-import { useAuth } from '../../auth';
 import { useToothSelector, useDentalTheme } from '../hooks/useToothSelector';
+import { useDentalBranding } from '../hooks/useDentalBranding';
+import { useDentalPracticeMenuOptions } from '../hooks/useDentalPracticeMenuOptions';
+import { initializeDentalBranding } from '../../../shared/utils/dentalBranding';
 
 type PracticeHeaderProps = {
-  appConfig: AppTypes.Config & { dentalPracticeName?: string };
+  appConfig: AppTypes.Config & { dentalPracticeName?: string; dentalPracticeLogo?: string };
 };
 
 function PracticeHeader({ appConfig }: PracticeHeaderProps) {
-  const { servicesManager, commandsManager } = useSystem();
-  const { customizationService } = servicesManager.services;
-  const [{ user }] = useUserAuthentication();
-  const { logout } = useAuth();
-
+  const { commandsManager } = useSystem();
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation();
-  const { show } = useModal();
 
   const { selectedTooth, toothSystem, onToothChange, onSystemChange } = useToothSelector();
   const { onThemeChange } = useDentalTheme();
+  const { practiceName, logoUrl } = useDentalBranding();
+  const menuOptions = useDentalPracticeMenuOptions();
 
-  const practiceName = appConfig.dentalPracticeName ?? 'Dental Practice';
+  const practiceNameFromConfig = appConfig.dentalPracticeName;
+  const logoPathFromConfig = appConfig.dentalPracticeLogo;
+
+  useEffect(() => {
+    initializeDentalBranding({
+      dentalPracticeName: practiceNameFromConfig,
+      dentalPracticeLogo: logoPathFromConfig,
+    });
+  }, [practiceNameFromConfig, logoPathFromConfig]);
 
   const onClickReturnButton = () => {
     const { pathname } = location;
@@ -46,59 +51,11 @@ function PracticeHeader({ appConfig }: PracticeHeaderProps) {
     navigate({ pathname: '/', search: decodeURIComponent(searchQuery.toString()) });
   };
 
-  const AboutModal = customizationService.getCustomization('ohif.aboutModal');
-  const AppearanceModal = customizationService.getCustomization('ohif.appearanceModal');
-  const UserPreferencesModal = customizationService.getCustomization('ohif.userPreferencesModal');
-
-  const menuOptions = [
-    {
-      title: AboutModal?.menuTitle ?? t('Header:About'),
-      icon: 'info',
-      onClick: () =>
-        show({
-          content: AboutModal,
-          title: AboutModal?.title ?? t('AboutModal:About OHIF Viewer'),
-          containerClassName: AboutModal?.containerClassName ?? 'max-w-md',
-        }),
-    },
-    {
-      title: UserPreferencesModal?.menuTitle ?? t('Header:Preferences'),
-      icon: 'settings',
-      onClick: () =>
-        show({
-          content: UserPreferencesModal,
-          title: UserPreferencesModal?.title ?? t('UserPreferencesModal:User preferences'),
-          containerClassName:
-            UserPreferencesModal?.containerClassName ?? 'flex max-w-4xl p-6 flex-col',
-        }),
-    },
-  ];
-
-  if (AppearanceModal) {
-    menuOptions.splice(1, 0, {
-      title: AppearanceModal.menuTitle ?? t('Header:Appearance'),
-      icon: 'ColorChange',
-      onClick: () =>
-        show({
-          content: AppearanceModal,
-          title: AppearanceModal.title ?? t('AppearanceModal:Appearance'),
-          containerClassName: AppearanceModal.containerClassName ?? 'max-w-md',
-        }),
-    });
-  }
-
-  if (user) {
-    menuOptions.push({
-      title: 'Logout',
-      icon: 'power-off',
-      onClick: () => logout(),
-    });
-  }
-
   return (
     <DentalHeader
       menuOptions={menuOptions}
       practiceName={practiceName}
+      logoUrl={logoUrl}
       isReturnEnabled={!!appConfig.showStudyList}
       onClickReturnButton={onClickReturnButton}
       practiceBar={

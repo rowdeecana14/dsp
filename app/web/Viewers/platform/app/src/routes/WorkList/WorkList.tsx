@@ -54,12 +54,32 @@ export default function WorkList({
     return Array.isArray(customized) ? customized : StudyList.defaultColumns;
   }, [customizationService]);
 
-  const logoComponent = appConfig?.whiteLabeling?.createLogoComponentFn?.(React) ?? (
-    <Icons.OHIFLogoHorizontal
-      aria-label="OHIF logo"
-      className="h-[22px] w-[232px]"
-    />
-  );
+  const HeaderComponent = customizationService.getCustomization(
+    'workList.headerComponent'
+  ) as React.ComponentType | undefined;
+
+  const useDentalPracticeHeader = Boolean(HeaderComponent);
+
+  const ToolbarLeftComponent = customizationService.getCustomization(
+    'workList.toolbarLeftComponent'
+  ) as React.ComponentType | undefined;
+
+  const logoComponent =
+    !useDentalPracticeHeader && ToolbarLeftComponent ? (
+      <ToolbarLeftComponent />
+    ) : !useDentalPracticeHeader ? (
+      appConfig?.whiteLabeling?.createLogoComponentFn?.(React) ?? (
+        <Icons.OHIFLogoHorizontal
+          aria-label="OHIF logo"
+          className="h-[22px] w-[232px]"
+        />
+      )
+    ) : undefined;
+
+  const studyListTitle = useDentalPracticeHeader
+    ? undefined
+    : (appConfig as { dentalPracticeName?: string } | undefined)?.dentalPracticeName ??
+      'Study List';
 
   const toolbarActions = useWorkListToolbarActions(servicesManager, dataSource, onRefresh);
 
@@ -79,10 +99,10 @@ export default function WorkList({
   }, [isLoadingData, data]);
 
   return (
-    <div className="flex h-screen min-h-0 flex-col overflow-hidden bg-black">
+    <div className="bg-background flex h-screen min-h-0 flex-col overflow-hidden">
       <InvestigationalUseDialog dialogConfiguration={appConfig?.investigationalUseDialog} />
-      <div className="flex h-full min-h-0 flex-col">
-        <div className="flex min-h-0 flex-1 flex-col">
+      {HeaderComponent ? <HeaderComponent /> : null}
+      <div className="flex min-h-0 flex-1 flex-col">
           <StudyList
             loadedModes={appConfig?.loadedModes ?? []}
             defaultWorkflowModeId={
@@ -116,14 +136,14 @@ export default function WorkList({
                   <div className="h-8 w-8" />
                 )
               }
-              title={'Study List'}
+              title={studyListTitle}
               onSelectionChange={sel => setSelected((sel as StudyRow[])[0] ?? null)}
               toolbarLeftComponent={logoComponent}
               toolbarRightActionsComponent={toolbarActions}
               toolbarRightComponent={
                 !isPreviewOpen ? (
                   <div className="relative -top-px mt-1 ml-2 flex items-center gap-1">
-                    <StudyListSettingsPopover />
+                    {!useDentalPracticeHeader ? <StudyListSettingsPopover /> : null}
                     <StudyList.OpenPreviewButton />
                   </div>
                 ) : undefined
@@ -137,7 +157,6 @@ export default function WorkList({
               />
             </StudyList.Preview>
           </StudyList>
-        </div>
       </div>
     </div>
   );
